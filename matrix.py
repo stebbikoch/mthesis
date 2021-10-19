@@ -142,28 +142,36 @@ class build_matrix:
         M = np.random.binomial(edges, p)
         # delete edges
         del_edges_indices = np.random.choice(edges, size=M, replace=False)
+        # this is a list containing tuples of indices
         edges_to_delete = np.array(self.index_tuples)[del_edges_indices]
         array = edges_to_delete
+        # extract from this list of tuples a list of left and right i and j values
         left_is = array[:, 0, 0]
         left_js = array[:, 0, 1]
         right_is = array[:, 1, 0]
         right_js = array[:, 1, 1]
         left_p = self.i_j_to_l(left_is, left_js)
         right_p = self.i_j_to_l(right_is, right_js)
+        # because of symmetry of matrix, we can exchange right and left indices
         left_ps = np.append(left_p, right_p)
         right_ps = np.append(right_p, left_p)
         self.L_0[left_ps, right_ps] = 0
         # adjust degree
-        self.L_0[left_ps, left_ps] += -1
+        self.L_0[left_ps, left_ps] += +1
+        self.left_ps = left_ps
+        self.right_ps = right_ps
         # add edges
         # only get zeros from upper triangle of matrix
-        ps, qs = np.where((self.L_0.toarray()+np.tril(np.ones((self.N, self.N)), -1)) != 0)
+        ps, qs = np.where((self.L_0.toarray()+np.tril(np.ones((self.N, self.N)))) == 0)
         add_edges_indices = np.random.choice(len(ps) , size=M, replace=False)
-        ps = ps[add_edges_indices].tolist()
-        qs = qs[add_edges_indices].tolist()
-        self.L_0[ps+qs, qs+ps] = 1
+        ps = ps[add_edges_indices]
+        qs = qs[add_edges_indices]
+        self.M = M
+        self.ps = ps
+        self.qs = qs
+        self.L_0[np.append(ps,qs), np.append(qs,ps)] = 1
         # adjust degree
-        #self.L_0[ps+qs, ps+qs] += 1
+        self.L_0[np.append(ps,qs), np.append(ps,qs)] += -1
 
 
     def save_to_json(self, name, thing_to_dump):
