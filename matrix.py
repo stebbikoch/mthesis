@@ -155,23 +155,29 @@ class build_matrix:
         # because of symmetry of matrix, we can exchange right and left indices
         left_ps = np.append(left_p, right_p)
         right_ps = np.append(right_p, left_p)
-        self.L_0[left_ps, right_ps] = 0
+        # new matrix to add to old
+        new_m = coo_matrix((-np.ones(len(left_ps)), (left_ps, right_ps)), shape=(self.N, self.N))
+        self.L_rnd = self.L_0 + new_m
         # adjust degree
-        self.L_0[left_ps, left_ps] += +1
+        new_m = coo_matrix((np.ones(len(left_ps)), (left_ps, left_ps)), shape=(self.N, self.N))
+        self.L_rnd = self.L_rnd + new_m
         self.left_ps = left_ps
         self.right_ps = right_ps
         # add edges
         # only get zeros from upper triangle of matrix
-        ps, qs = np.where((self.L_0.toarray()+np.tril(np.ones((self.N, self.N)))) == 0)
+        ps, qs = np.where((self.L_rnd.toarray()+np.tril(np.ones((self.N, self.N)))) == 0)
         add_edges_indices = np.random.choice(len(ps) , size=M, replace=False)
         ps = ps[add_edges_indices]
         qs = qs[add_edges_indices]
         self.M = M
         self.ps = ps
         self.qs = qs
-        self.L_0[np.append(ps,qs), np.append(qs,ps)] = 1
+        # new matrix to add to old
+        new_m = coo_matrix((np.ones(2*len(ps)), (np.append(ps, qs),np.append(qs,ps))), shape=(self.N, self.N))
+        self.L_rnd = self.L_rnd + new_m
         # adjust degree
-        self.L_0[np.append(ps,qs), np.append(ps,qs)] += -1
+        new_m = coo_matrix((-np.ones(2*len(ps)), (np.append(ps, qs),np.append(ps,qs))), shape=(self.N, self.N))
+        self.L_rnd = self.L_rnd + new_m
 
 
     def save_to_json(self, name, thing_to_dump):
