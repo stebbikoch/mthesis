@@ -190,7 +190,16 @@ class build_matrix:
         with open('./matrices/'+name+'.txt', 'w') as outfile:
             json.dump(thing_to_dump, outfile)
 
+    def create_dict(self):
+        # first create structure to save in. Fits to paper grabow 2015.
+        dict1 = {'q=10^-5': [], 'q=10^-4': [], 'q=10^-3': [], 'q=10^-2': [], 'q=10^-1': []}
+        self.dict = {'k=20': dict1, 'k=50': dict1, 'k=100': dict1, 'k=200': dict1, 'k=400': dict1, 'k=800': dict1}
 
+    def second_largest_eigenvalue(self, q):
+        self.all_indices()
+        self..one_int_index_tuples()
+        self.Laplacian_0()
+        z.random_rewiring(q)
 
 
 if __name__ == "__main__":
