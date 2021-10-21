@@ -12,7 +12,10 @@ class compute_analytically:
         self.k = data[0]
         self.d_0 = data[2]
         self.D = data[1]
-        self.all_indices = np.array([[i,j] for i in range(int((N_vec[0]+1)/2))
+        if N_vec[1] == 1:
+            self.all_indices = np.array([[i, 0] for i in range(int((N_vec[0] + 1) / 2))])
+        else:
+            self.all_indices = np.array([[i,j] for i in range(int((N_vec[0]+1)/2))
                                      for j in range(int(-(N_vec[1]-3)/2), int((N_vec[1]+1)/2))])
         print(self.all_indices)
     def plot_d_function(self):
@@ -39,6 +42,15 @@ class compute_analytically:
             return lam_0
         else:
             return lam_0 + delta_lam
+
+    def second_largest_eival(self, k, q):
+        """
+        calculate the region around p=0 and find the second largest eigenvalue
+        :return:
+        """
+        eigenvalues = np.array([self.eival(np.array([p/self.N,0]), k/2, q) for p in range(-10, 10)])
+        second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
+        return second_largest
 
 if __name__ == '__main__':
     z = compute_analytically('2dtorus_hexagonal_5_by_5', 25, [5,5])

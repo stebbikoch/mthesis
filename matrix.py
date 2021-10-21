@@ -3,6 +3,7 @@ import numpy as np
 import json
 from scipy.sparse import coo_matrix
 from scipy.sparse import identity
+from scipy.sparse.linalg import eigsh
 
 
 class integer_inequality:
@@ -13,7 +14,10 @@ class integer_inequality:
         self.n_max = N_1 * N_2
 
     def distance(self, i, j):
-        return i**2+j**2+i*j
+        if self.d==1:
+            return i
+        else:
+            return i**2+j**2+i*j
 
     def number(self, d):
         """
@@ -95,7 +99,7 @@ class build_matrix:
                                            [(item[0]+i)%self.N_1, (item[1]+j)%self.N_2]]
                     indices_tuples.append(tuple)
         self.index_tuples = indices_tuples
-        print(self.index_tuples)
+        #print(self.index_tuples)
 
     def one_int_index_tuples(self):
         # left side
@@ -109,14 +113,14 @@ class build_matrix:
         left_ps = np.append(left_p, right_p)
         right_ps = np.append(right_p, left_p)
         self.A = coo_matrix((np.ones(len(left_ps)), (left_ps, right_ps)), shape=(self.N, self.N))
-        print('kontrolllänge:', len(left_ps))
+        #print('kontrolllänge:', len(left_ps))
 
     def i_j_to_l(self, i, j):
-        return i*self.N_1 + j
+        return i*self.N_2 + j
 
     def l_to_i_j(self, l):
-        i = int(l/self.N_1)
-        j = l - i*self.N_1
+        i = int(l/self.N_2)
+        j = l - i*self.N_2
         return i,j
 
     def Laplacian_0(self):
@@ -190,17 +194,12 @@ class build_matrix:
         with open('./matrices/'+name+'.txt', 'w') as outfile:
             json.dump(thing_to_dump, outfile)
 
-    def create_dict(self):
-        # first create structure to save in. Fits to paper grabow 2015.
-        dict1 = {'q=10^-5': [], 'q=10^-4': [], 'q=10^-3': [], 'q=10^-2': [], 'q=10^-1': []}
-        self.dict = {'k=20': dict1, 'k=50': dict1, 'k=100': dict1, 'k=200': dict1, 'k=400': dict1, 'k=800': dict1}
-
-    def second_largest_eigenvalue(self, q):
-        self.all_indices()
-        self..one_int_index_tuples()
-        self.Laplacian_0()
-        z.random_rewiring(q)
-
+    def second_largest_eigenvalue(self):
+        #self.random_rewiring(q)
+        degree = self.numbers[self.important_index]
+        eigenvalues, eigenvectors = eigsh(self.L_rnd + degree * identity(self.N), k=8, which='LM')
+        second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
+        return second_largest-degree
 
 if __name__ == "__main__":
     x = integer_inequality(2, 9, 9)

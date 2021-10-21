@@ -1,6 +1,7 @@
 # dont track certain files
 d_functions/
 matrices/
+reproduce/
 __pycache__/
 .ipynb_checkpoints/
 .idea/
