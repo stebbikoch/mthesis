@@ -14,7 +14,7 @@ def main(q_values, k_values, name):
     dictionary = {str(k):dictq for k in k_values}
     for k in k_values:
         for q in q_values:
-            z = compute_analytically('1d_ring_1001_by_1', 10001, [10001, 1])
+            z = compute_analytically('1d_ring_1001_by_1', 1001, [1001, 1])
             lam = z.second_largest_eival(k, q)
             dictionary[str(k)][str(q)].append(lam)
         print('one k done.', k)
@@ -25,6 +25,9 @@ def main(q_values, k_values, name):
 
 
 if __name__ == '__main__':
-    q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+    exponent = np.arange(51)
+    q_values = 10**(-exponent/10)
+    print(q_values)
+    #q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
     k_values = [20, 50, 100, 200, 400, 800]
     main(q_values, k_values, 'reproduce_1001_undirected_analytics')

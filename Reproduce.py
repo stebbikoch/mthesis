@@ -8,18 +8,19 @@ import scipy.sparse
 from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import eigs
 
-def main(q_values, k_values, name):
-    dictq = {str(q):[] for q in q_values}
-    dictionary = {str(k):dictq for k in k_values}
+def main(q_values, k_values, name, n):
+    dictionary = {str(k):{str(q):[] for q in q_values} for k in k_values}
     for k in k_values:
-        z = build_matrix('1d_ring_1001_by_1', 10001, 1, (k/2))
+        z = build_matrix('1d_ring_1001_by_1', 1001, 1, (k/2))
         z.all_indices()
         z.one_int_index_tuples()
         z.Laplacian_0()
         for q in q_values:
-            z.random_rewiring(q)
-            lam = z.second_largest_eigenvalue()
-            dictionary[str(k)][str(q)].append(lam)
+            # do the same thing n times
+            for i in range(n):
+                z.random_rewiring(q)
+                lam = z.second_largest_eigenvalue()/k
+                dictionary[str(k)][str(q)].append(lam)
         print('one k done.', k)
     # save dictionary in json
     print('done', dictionary)
@@ -28,6 +29,8 @@ def main(q_values, k_values, name):
 
 
 if __name__ == '__main__':
-    q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+    exponent = np.arange(16)
+    q_values = 10 ** (-exponent / 3)
+    # q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
     k_values = [20, 50, 100, 200, 400, 800]
-    main(q_values, k_values, 'reproduce_1001_undirected_no_averaging')
+    main(q_values, k_values, 'reproduce_1001_undirected_with_averaging', 10)
