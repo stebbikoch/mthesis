@@ -1,14 +1,18 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 class eigenvs():
-    def __init__(self):
+    def __init__(self, radius=None):
         self.N = 100**3
-        self.d_0 = 10
+        if radius:
+            self.d_0 = radius
+        else:
+            self.d_0 = 10
         self.k = self.count(self.d_0)
         self.q = 0
-        self.T = -self.q**2*self.k/(self.N-1-(1-self.q)*self.k)
-        self.U = 1-self.q+self.q*self.k/(self.N-1-(1-self.q)*self.k)
+        self.Delta_2 = self.q*self.k/(self.N-1-(1-self.q)*self.k)
+        self.Delta_1 = -self.q + self.q*self.Delta_2
 
 
     def count(self, d_0):
@@ -20,26 +24,18 @@ class eigenvs():
                         number += 1
         return number
 
-    def calc_alpha(self, p):
-        prefactor=1/(2*self.N*p**3*np.pi**2)
-        postfactor=np.sin(2*np.pi*p*self.d_0)-2*np.pi*self.d_0/self.N**(1/3)*np.cos(2*np.pi*p*self.d_0)
-        self.alpha = prefactor*postfactor
-        #return alpha
+    def calc_eigenvals(self,p):
+        output = -self.k
+        a= 1-self.q+((self.q-1)*self.q+self.k)
 
-    def calc_beta(self, p):
-        prefactor = 1/(2*self.N*p**3*np.pi**2)
-        postfactor = np.sin(2 * np.pi * p * self.N**(1/3)) - 2 * np.pi * np.cos(2 * np.pi * p * self.N**(1/3))
-        self.beta = prefactor*postfactor - self.alpha
-
-    def calc(self, p):
-        self.calc_alpha(p)
-        self.calc_beta(p)
-        self.eigenvals = (-self.k + (1+self.U-self.T)*self.alpha+self.T*self.beta)/self.k
-
-    def controll(self,p):
-        l=p*100
-        self.controll_eigenvals=(-self.k - self.d_0/(np.pi*l**3*self.N**(1/3)))/self.k
-
+        output += (- self.q * self.k) / (self.N - 1 - (1 - self.q) * self.k)
+        self.other1 = a*(np.sin(2*np.pi*self.d_0*p)-2*np.pi*self.d_0*p*np.cos(2*np.pi*self.d_0*p))/self.k
+        self.other2 = (2*np.pi**2*p**3*self.N)/self.k
+        self.other3 = output/self.k*np.ones(len(p))
+        output += a * (
+                    np.sin(2 * np.pi * self.d_0 * p) - 2 * np.pi * self.d_0 * p * np.cos(2 * np.pi * self.d_0 * p)) / (
+                              2 * np.pi ** 2 * p ** 3 * self.N)
+        self.eigenvals=output/self.k
 
     def plot_eigenvals(self, p):
         plt.scatter(p, self.eigenvals)
@@ -47,20 +43,19 @@ class eigenvs():
         plt.ylim(-0.5*1e16,0.5*1e16)
 
 if __name__ == '__main__':
-    aha = eigenvs()
-    aha2=eigenvs()
-    print(aha.k)
-    p1 = np.arange(1,500)/500
-    p2=np.arange(1,100)/100
-    aha.calc(p1)
-    aha2.calc(p2)
-    aha.controll(p2)
-    plt.scatter(p2, aha2.eigenvals)
-    plt.yscale('symlog')
-    plt.ylim(-1-1e-6)
-    plt.plot(p1, aha.eigenvals)
-    #plt.plot(p2, aha.controll_eigenvals)
-
-    #plt.ylim(-0.5 * 1e16, 0.5 * 1e16)
+    p = 10**(-np.arange(1, 601) / 200)
+    fig = plt.figure()
+    for i in [5, 10, 20, 35, 49]:
+        aha = eigenvs(radius=i)
+        aha.calc_eigenvals(p)
+        plt.plot(p, aha.eigenvals, label=r'$k=$'+str(aha.k)+', $r_0=$'+str(aha.d_0))
+        #plt.plot(p, aha.other1, '--')
+        #plt.plot(p, aha.other2, '--')
+        #plt.plot(p, aha.other3, '--')
+    plt.xlabel(r'Absolute value of reciprocal index $|p|$')
+    plt.ylabel(r'Normalized mean-field eigenvalues $\lambda(|p|)$')
+    plt.xscale('log')
+    plt.legend()
+    fig.savefig('continuous_eigenvalues.svg', format='svg', dpi=1000)
     plt.show()
 

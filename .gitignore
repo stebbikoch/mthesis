@@ -5,3 +5,7 @@ reproduce/
 __pycache__/
 .ipynb_checkpoints/
 .idea/
+*.eps
+*.pdf
+*.png
+*.svg
