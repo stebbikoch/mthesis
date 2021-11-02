@@ -2,6 +2,7 @@
 d_functions/
 matrices/
 reproduce/
+pictures/
 __pycache__/
 .ipynb_checkpoints/
 .idea/

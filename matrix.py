@@ -7,32 +7,30 @@ from scipy.sparse.linalg import eigsh
 
 
 class integer_inequality:
-    def __init__(self, dimension, N_1, N_2):
+    def __init__(self, dimension, N):
         self.d = dimension
-        self.N_1 = N_1
-        self.N_2 = N_2
-        self.n_max = N_1 * N_2
+        self.N = N
+        self.N_tot = np.prod(self.N)
 
-    def distance(self, i, j):
-        if self.d==1:
-            return i
-        else:
-            return i**2+j**2+i*j
+    def distance(self, i, j, k):
+        return max(i,j,k)
 
-    def number(self, d):
+    def d_list(self, d):
         """
         This function is supposed to find all (positive) indices, that satisfy the inequality d(i,j)<=d and returns them
-        for a value of d. Also it counts the number of those tuples.
+        for a value of d. Also it counts the number of those tuples. For simplicity only allow positive numbers of nodes
+        per dimension.
         :param d:
         :return:
         """
         number = 0
         indices = []
-        #if len(self.indices) == d-1:
-         #   number = self.numbers(d-1)
-        #    indices = self.indices[d-1]
-        for i in range(int(min(d**2+1, (self.N_1-1)/2+1))):
-            for j in range(int(min(d**2+1, (self.N_2-1)/2+1))):
+        # lower limit
+        lo_li = int(-min(d, self.N_1/2))
+        # upper limit
+        up_li =
+        for i in range(int(-min(d, self.N_1/2+1))):
+            for j in range(int(min(d**2+1, (self.n)/2+1))):
                 #if (i,j) in indices:
                  #   pass
                 if self.distance(i,-j) <= d and j>0 and i>0:
