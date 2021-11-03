@@ -27,12 +27,12 @@ class eigenvs():
         return number
 
     def calc_eigenvals_discrete(self, p_array):
-        output = []
+        alpha = []
         for p in p_array:
-            output.append(- self.k + (1+self.Delta_1-self.Delta_2)
-                          *np.sum(np.exp(1j*2*np.pi*np.dot(np.array(self.d_list), p)))
-                     -self.Delta_2)
-        self.eigenvals_discrete = np.array(output)/self.k
+            alpha.append(np.sum(np.exp(1j*2*np.pi*np.dot(np.array(self.d_list), p))))
+        self.alpha_dis_k = np.array(alpha)/self.k
+        output = np.array(self.alpha_dis_k)*(1+self.Delta_1-self.Delta_2) -self.k -self.Delta_2
+        self.eigenvals_discrete = output/self.k
         return self.eigenvals_discrete
         #return output/self.k
 
@@ -45,8 +45,9 @@ class eigenvs():
         #self.other1 = a*(np.sin(2*np.pi*self.d_0*p)-2*np.pi*self.d_0*p*np.cos(2*np.pi*self.d_0*p))/self.k
         #self.other2 = (2*np.pi**2*p**3*self.N)/self.k
         #self.other3 = output/self.k*np.ones(len(p))
-        alpha = 1/(2*np.pi*p**2)*jv(1, 2*np.pi*self.d_0*p)*2*np.pi*self.d_0*p#(np.sin(2*np.pi*self.d_0*p)/(2*np.pi*self.d_0*p)-np.cos(2*np.pi*self.d_0*p))
-        output += a * (alpha) - self.Delta_2
+        self.alpha = 1/(2*np.pi*p**2)*jv(1, 2*np.pi*self.d_0*p)*2*np.pi*self.d_0*p#(np.sin(2*np.pi*self.d_0*p)/(2*np.pi*self.d_0*p)-np.cos(2*np.pi*self.d_0*p))
+        self.alpha_k = self.alpha/self.k
+        output += a * (self.alpha) - self.Delta_2
         self.eigenvals=output/self.k
         return self.eigenvals
 
