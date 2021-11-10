@@ -6,12 +6,13 @@ class compute_analytically:
     """
     Methods to compute the Eigenvalues of a Matrix in Mean-field approximation.
     """
-    def __init__(self, filename_d_function, N, N_vec):
+    def __init__(self, filename_d_function, N):
         f = open('./d_functions/'+filename_d_function+'.txt', )
         # returns JSON object as
         # a dictionary
         data = json.load(f)
-        self.N=N
+        self.N = N
+        self.N_tot=np.prod(N)
         self.k = data[0]
         self.d_0 = data[2]
         self.D = data[1]
@@ -39,8 +40,8 @@ class compute_analytically:
         D = np.array(self.D[index])
         k = self.k[index]
         #print('k', k)
-        U = -q+q**2*k/(self.N-1-(1-q)*k)#q*(1-k/(self.N-1))
-        T = q*k/(self.N-1-(1-q)*k)
+        U = -q+q**2*k/(self.N_tot - 1 - (1 - q) * k)#q*(1-k/(self.N-1))
+        T = q*k/(self.N_tot - 1 - (1 - q) * k)
         #print('l',len(D))
         lam_0 = -k + 2 * np.sum(np.cos(2*np.pi*np.dot(D,p)))
         #print('lam_0', lam_0)
@@ -61,10 +62,13 @@ class compute_analytically:
         calculate the region around p=0 and find the second largest eigenvalue
         :return:
         """
-        eigenvalues = np.array([self.eival(np.array([p/self.N,0]), k/2, q) for p in range(-10, 10)])
+        eigenvalues = np.array([self.eival(np.array([p / self.N_tot, 0]), k / 2, q) for p in range(-10, 10)])
         #print(eigenvalues)
         second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
         return second_largest
+
+    def max_norm(self):
+
 
 if __name__ == '__main__':
 
