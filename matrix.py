@@ -64,7 +64,7 @@ class integer_inequality:
             json.dump([self.numbers, self.indices, self.d_0], outfile)
 
 class build_matrix:
-    def __init__(self, d_function, N, d_0):
+    def __init__(self, d_function, N, r_0):
         self.d_function = d_function # string name of d_function
         f = open('./d_functions/'+self.d_function+'.txt', )
         # returns JSON object as
@@ -75,8 +75,9 @@ class build_matrix:
         self.d_0s = np.array(data[2])
         self.N = N
         self.N_tot = np.prod(N)
-        self.important_index = np.where(self.d_0s <= d_0)[0][-1]
+        self.important_index = np.where(self.d_0s == r_0)[0][-1]
         self.D_0 = self.all_indices_list[self.important_index]
+        self.r_0 = r_0
         print(self.D_0)
 
     def all_indices(self):
@@ -143,33 +144,40 @@ class build_matrix:
         # delete edges
         del_edges_indices = np.random.choice(edges, size=M, replace=False)
         # this is a list containing tuples of indices
-        ps, qs, values = find((triu(self.L_0.toarray(), k=1)))
-        # because of symmetry of matrix, we can exchange right and left indices
-        left_ps = np.append(ps[del_edges_indices], qs[del_edges_indices])
-        right_ps = np.append(qs[del_edges_indices], ps[del_edges_indices])
-        # new matrix to add to old
-        new_m = coo_matrix((-np.ones(len(left_ps)), (left_ps, right_ps)), shape=(self.N_tot, self.N_tot))
-        self.L_rnd = self.L_0 + new_m
-        # adjust degree
-        new_m = coo_matrix((np.ones(len(left_ps)), (left_ps, left_ps)), shape=(self.N_tot, self.N_tot))
-        self.L_rnd = self.L_rnd + new_m
-        self.left_ps = left_ps
-        self.right_ps = right_ps
-        # add edges
-        # only get zeros from upper triangle of matrix
-        ps, qs = np.where((self.L_rnd.toarray()+np.tril(np.ones((self.N_tot, self.N_tot)))) == 0)
-        add_edges_indices = np.random.choice(len(ps) , size=M, replace=False)
-        ps = ps[add_edges_indices]
-        qs = qs[add_edges_indices]
-        self.M = M
-        self.ps = ps
-        self.qs = qs
-        # new matrix to add to old
-        new_m = coo_matrix((np.ones(2*len(ps)), (np.append(ps, qs),np.append(qs,ps))), shape=(self.N_tot, self.N_tot))
-        self.L_rnd = self.L_rnd + new_m
-        # adjust degree
-        new_m = coo_matrix((-np.ones(2*len(ps)), (np.append(ps, qs),np.append(ps,qs))), shape=(self.N_tot, self.N_tot))
-        self.L_rnd = self.L_rnd + new_m
+        band_low_part = tril(self.L_0, k=(self.r_0+1)-self.N_tot)
+        upper_triangle = triu(self.L_0, k=1)
+        band_up_part = upper_triangle - triu(upper_triangle, k=(self.r_0+1))
+        band = band_low_part + band_up_part
+        ps, qs, values = find(band)
+        ps, qs = ps[del_edges_indices], qs[del_edges_indices]
+        # sort with respect to ps
+        args = np.argsort(ps)
+        ps = ps[args]
+        qs = qs[args]
+        #print('sorted ps', ps, qs)
+        # resort the qs
+        for p in list(set(ps)):
+            args = np.where(ps==p)
+            new_qargs = np.argsort((qs[args]-p)%self.N_tot)
+            #print('args', args,'new_args', new_qargs)
+            qs[args] = qs[args][new_qargs]
+        #print('sorted qs', qs)
+        # go through array
+        self.L_rnd = self.L_0
+        for i in range(len(ps)):
+            # delete edge and adjust degree
+            self.L_rnd += coo_matrix(([-1, -1, 1], ([ps[i], qs[i], qs[i]], [qs[i], ps[i], qs[i]])),
+                                   shape=(self.N_tot, self.N_tot))
+            # look for free nodes in that row
+            free_qs=np.where(self.L_rnd.getrow(ps[i]).toarray()[0]==0)
+            # choose one of them
+            new_q=np.random.choice(free_qs[0], size=1)[0]
+            # rewire, adjust degree
+            self.L_rnd += coo_matrix(([1,1,-1], ([ps[i], new_q, new_q], [new_q, ps[i], new_q])),
+                                   shape=(self.N_tot, self.N_tot))
+
+
+
 
 
     def save_to_json(self, name, thing_to_dump):
@@ -190,29 +198,11 @@ class build_matrix:
         return second_largest-shift
 
 if __name__ == "__main__":
-    x = integer_inequality(2, 9, 9)
-    x.all_numbers(3*8**2)
-    #y=x.number(7203)
-    #print(x.indices)
-    #print(y[0])
-    x.save_to_json('2dtorus_hexagonal_9_by_9')
-    #print(zip(range(5), range(5)))
-    # name = '2dtorus_tridiagonal'
-    # f = open('./d_functions/'+name+'.txt', )
-    # # returns JSON object as
-    # # a dictionary
-    # data = json.load(f)
-    # plt.step(data[2], data[0], where='post')
-    # plt.hlines(9800, 0, 7203, linestyles='--')
-    # print(data[0][-1])
-    # plt.show()
-    #x = np.array([1,2,5,8,15,16, 20])
-    #print(np.where(x<=15)[0][-1])
-    #z = build_matrix('2dtorus_tridigonal', 99, 99, 200)
-    #z.all_indices()
-    #z.one_int_index_tuples()
-    # z.Adjacency_0()
-    #z.Laplacian_0()
-    #z.random_rewiring(0.05)
-    # print(z.L_0)
-    #print('functioning')
+    z = build_matrix('1d_ring_1000', np.array([10, 1, 1]), 2)
+    z.all_indices()
+    z.one_int_index_tuples_and_adjacency()
+    z.Laplacian_0()
+    z.random_rewiring(0.7)
+    print(z.L_rnd.toarray())
+    print(z.L_0.toarray())
+
