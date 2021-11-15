@@ -127,6 +127,30 @@ class build_matrix:
         self.degree = self.numbers[self.important_index]
         self.L_0 = -self.degree*identity(self.N_tot) + self.A
 
+    @staticmethod
+    def fast_rewiring_directed_ith_row(L_0_i, N_tot, k, q):
+        """
+        Now we have to loop through all the rows.
+        :param q:
+        :return:
+        """
+        # edges to be removed
+        M = np.random.binomial(int(k/2), q)
+        # delete edges
+        del_edges_indices = np.random.choice(np.arange(M), size=M, replace=False)
+        # find ones in upper triangle of matrix
+        L_rnd_i = L_0_i
+        qs, values = find(L_0_i, k=1)
+        qs_del = qs[del_edges_indices]
+        L_0_i[qs_del] = 0
+        qs_not_del = np.setdiff1d(qs, qs_del)
+        # create new edges
+        new_indices = np.random.shuffle(np.arange(N_tot))
+        new_indices = np.setdiff1d(new_indices, qs_not_del, assume_unique=True)
+        L_0_i[new_indices[:M]]
+        return L_0_i
+
+
     def random_rewiring_undirected(self, q):
         # pick number of rewiring edges
         k = self.numbers[self.important_index]
@@ -135,8 +159,9 @@ class build_matrix:
         # delete edges
         del_edges_indices = np.random.choice(edges, size=M, replace=False)
         # find ones in upper triangle of matrix
-        self.L_rnd = self.L_0
+        self.L_rnd = self.L_0.copy()
         ps, qs, values = find(triu(self.L_rnd, k=1))
+        #print('edges, ps', edges, len(ps))
         ps_del, qs_del = ps[del_edges_indices], qs[del_edges_indices]
         # adjust degrees, add ones
         #print(self.L_rnd.toarray())
@@ -144,27 +169,6 @@ class build_matrix:
         #print(self.L_rnd.toarray())
         self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
                                  shape=(self.N_tot, self.N_tot))
-        #self.L_rnd[np.append(ps_del, qs_del), np.append(ps_del, qs_del)] += np.ones(2*len(ps_del))
-        #print(self.L_rnd.toarray())
-        # only get zeros from upper triangle of matrix
-        # counter=0
-        # # change to lil format for better performance
-        # self.L_rnd = self.L_rnd.tolil()
-        # while counter<len(ps_del):
-        #     p = np.random.randint(0,self.N_tot, size=1)[0]
-        #     q = ((p + np.random.randint(0,self.N_tot-1, size=1))%self.N_tot)[0]
-        #     print(p,q)
-        #     if self.L_rnd[p,q]==0:
-        #         self.L_rnd[[p,q],[q,p]]=1
-        #         #print(self.L_rnd.toarray())
-        #         #print(type(self.L_rnd))
-        #         #print(p,q)
-        #         self.L_rnd-=csr_matrix((np.array([1,1]),(np.array([q,p]),np.array([q,p]))), shape=(self.N_tot, self.N_tot))
-        #         counter += 1
-        #         if counter>200:
-        #             print('more than 100')
-        #             quit()
-        #print('last matrix', self.L_rnd.toarray())
         ps, qs = np.where((self.L_rnd.toarray() + np.tril(np.ones((self.N_tot, self.N_tot)))) == 0)
         add_edges_indices = np.random.choice(len(ps), size=M, replace=False)
         ps = ps[add_edges_indices]
@@ -173,6 +177,36 @@ class build_matrix:
         self.L_rnd += coo_matrix((np.ones(2 * len(ps)), (np.append(ps, qs), np.append(qs, ps))), shape=(self.N_tot, self.N_tot))
         # adjust degree
         self.L_rnd += coo_matrix((-np.ones(2 * len(ps)), (np.append(ps, qs), np.append(ps, qs))), shape=(self.N_tot, self.N_tot))
+
+    @staticmethod
+    def fast_rewiring(L_0, k, q, N_tot):
+        # pick number of rewiring edges
+        edges = int(N_tot * k / 2)
+        M = np.random.binomial(edges, q)
+        # delete edges
+        del_edges_indices = np.random.choice(edges, size=M, replace=False)
+        # find ones in upper triangle of matrix
+        L_rnd = L_0.copy()
+        ps, qs, values = find(triu(L_rnd, k=1))
+        # print('edges, ps', edges, len(ps))
+        ps_del, qs_del = ps[del_edges_indices], qs[del_edges_indices]
+        # adjust degrees, add ones
+        # print(L_rnd.toarray())
+        L_rnd[np.append(ps_del, qs_del), np.append(qs_del, ps_del)] += -np.ones(2 * len(ps_del))
+        # print(L_rnd.toarray())
+        L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
+                                 shape=(N_tot, N_tot))
+        ps, qs = np.where((L_rnd.toarray() + np.tril(np.ones((N_tot, N_tot)))) == 0)
+        add_edges_indices = np.random.choice(len(ps), size=M, replace=False)
+        ps = ps[add_edges_indices]
+        qs = qs[add_edges_indices]
+        # new matrix to add to old
+        L_rnd += coo_matrix((np.ones(2 * len(ps)), (np.append(ps, qs), np.append(qs, ps))),
+                                 shape=(N_tot, N_tot))
+        # adjust degree
+        L_rnd += coo_matrix((-np.ones(2 * len(ps)), (np.append(ps, qs), np.append(ps, qs))),
+                                 shape=(N_tot, N_tot))
+        return L_rnd
 
     def random_rewiring_stick_with_source(self, p):
         """
@@ -239,14 +273,27 @@ class build_matrix:
 
     def second_largest_eigenvalue_normalized(self, numb, fact):
         D = diags(-1/self.L_rnd.diagonal())
-        shift = fact
-        eigenvalues, eigenvectors = eigsh(D*self.L_rnd + shift * identity(self.N_tot), k=numb, which='LM')
+        #print(D.toarray())
+        eigenvalues, eigenvectors = eigsh(D*self.L_rnd + fact * identity(self.N_tot), k=numb, which='LM')
         second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
-        print(eigenvalues)
-        return second_largest-shift
+        #print(eigenvalues)
+        return second_largest-fact
+
+    @staticmethod
+    def fast_second_largest(L_rnd, N_tot, directed=False):
+        if directed:
+            k=L_rnd[0,0]
+            eigenvalues, eigenvectors = eigsh(1/k * L_rnd + 1.2 * identity(N_tot), k=8, which='LM')
+        else:
+            D = diags(-1 / L_rnd.diagonal())
+            # print(D.toarray())
+            eigenvalues, eigenvectors = eigsh(D * L_rnd + 1.2 * identity(N_tot), k=8, which='LM')
+        second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
+        # print(eigenvalues)
+        return second_largest - 1.2
 
 if __name__ == "__main__":
-    z = build_matrix('1d_ring_1000', np.array([1000, 1, 1]), 20)
+    z = build_matrix('1d_ring_1000', np.array([1000, 1, 1]), 200)
     z.all_indices()
     z.one_int_index_tuples_and_adjacency()
     z.Laplacian_0()
