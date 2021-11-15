@@ -15,7 +15,7 @@ def worker(q, instance=None):
     lam = instance.second_largest_eigenvalue(8, 1.2)/instance.degree
     return lam
 
-def main(q_values, k_values, name, n):
+def main(q_values, k_values, name, n, parallel=False):
     dictionary = {str(k):{str(q):[] for q in q_values} for k in k_values}
     for k in k_values:
         z = build_matrix('1d_ring_1000', np.array([1000, 1, 1]), (k/2))
@@ -25,9 +25,15 @@ def main(q_values, k_values, name, n):
         z.Laplacian_0()
         for q in q_values:
             # do the same thing n times
-            with mp.Pool(processes=n) as p:
-                lams=p.map(partial(worker, instance=z),[q]*n)
-            print('value of lams',lams)
+            if parallel:
+                with mp.Pool(processes=n) as p:
+                    lams=p.map(partial(worker, instance=z),[q]*n)
+            else:
+                lams = np.zeros(n)
+                for i in range(n):
+                    z.random_rewiring_undirected(q)
+                    lams[i] = z.second_largest_eigenvalue_normalized(8, 1.2)
+            #print('value of lams',lams)
             dictionary[str(k)][str(q)] = lams
         print('one k done.', k)
     # save dictionary in json
