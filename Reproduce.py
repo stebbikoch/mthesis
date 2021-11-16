@@ -2,7 +2,7 @@ from matrix import build_matrix
 import json
 from matrix import integer_inequality
 import numpy as np
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, csr_matrix, lil_matrix
 from matplotlib import pyplot as plt
 import scipy.sparse
 from scipy.sparse.linalg import eigsh
@@ -11,19 +11,25 @@ from scipy.sparse import identity
 import multiprocessing as mp
 from functools import partial
 from numba import njit
+from scipy.sparse import *
 
 def slow_directed(L_0, k, q, N_tot):
-    L_rnd = k/2*identity(N_tot)
+    L_rnd = lil_matrix((N_tot, N_tot))#-k*identity(N_tot)
     for i in range(N_tot):
-        L_rnd[i] = build_matrix.fast_rewiring_directed_ith_row(L_0.getrow(i), N_tot, k, q)
+        L_rnd[i] = build_matrix.fast_rewiring_directed_ith_row(L_0.tolil().getrow(i), N_tot, k, q, i)
     return L_rnd
         #with mp.Pool(processes=N_tot) as p:
          #   lams = p.map(partial(worker, L_0=z.L_0, k=k, N_tot=z.N_tot), [q] * n)
 
 
-def worker(q, L_0=None, k=None, N_tot=None, directed=False):
+def worker(q, L_0=None, k=None, N_tot=None, directed=False, numba=True):
     if directed:
-        L_rnd=slow_directed(L_0, k, q, N_tot)
+        if numba:
+            rows, columns, values = find(L_0)
+            new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, N_tot, k, q)
+            L_rnd = csr_matrix((values, (new_rows, columns)), shape=(N_tot, N_tot))
+        else:
+            L_rnd=slow_directed(L_0, k, q, N_tot)
     else:
         L_rnd=build_matrix.fast_rewiring(L_0, k, q, N_tot)
     #instance.random_rewiring_undirected(q)
@@ -52,15 +58,16 @@ def main(q_values, k_values, name, n, parallel=False, numba=False, directed=Fals
             # do the same thing n times
             if parallel:
                 with mp.Pool(processes=n) as p:
-                    lams=p.map(partial(worker, L_0=z.L_0, k=k, N_tot=z.N_tot),[q]*n)
+                    lams=p.map(partial(worker, L_0=z.L_0, k=k, N_tot=z.N_tot, directed=directed),[q]*n)
                 lams = np.mean(np.array(lams)).tolist()
             elif numba:
                 lams = numba_func(q, z.L_0, k, z.N_tot, n)
             else:
                 lams = np.zeros(n)
                 for i in range(n):
-                    z.random_rewiring_undirected(q)
-                    lams[i] = z.second_largest_eigenvalue_normalized(8, 1.2, directed=directed)
+                    lams[i]=worker(q, z.L_0, k=k, N_tot=z.N_tot, directed=True)
+                    #z.random_rewiring_undirected(q)
+                    #lams[i] = z.second_largest_eigenvalue_normalized(8, 1.2, directed=directed)
                 lams=np.mean(lams).tolist()
             #print('value of lams',lams)
             dictionary[str(k)][str(q)] = lams

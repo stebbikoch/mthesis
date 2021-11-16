@@ -3,8 +3,9 @@ import numpy as np
 import json
 from scipy.sparse import coo_matrix
 from scipy.sparse import identity
-from scipy.sparse.linalg import eigsh
+from scipy.sparse.linalg import eigsh, eigs
 from scipy.sparse import *
+from numba import njit, jit, prange
 
 
 class integer_inequality:
@@ -128,27 +129,90 @@ class build_matrix:
         self.L_0 = -self.degree*identity(self.N_tot) + self.A
 
     @staticmethod
-    def fast_rewiring_directed_ith_row(L_0_i, N_tot, k, q):
+    #@jit#(parallel=True)
+    def numba_fast_directed_rewiring(rows, columns, N_tot, k, q):
+        """
+        Gets indices of matrix elements of ordered Laplacian as rows and columns vectors. Return new rows and columns
+        vectors, representing the new indices. Hopefully parallizable with numba. This functions columnwise.
+        :param rows:
+        :param columns:
+        :param N_tot:
+        :param k:
+        :param q:
+        :return:
+        """
+        # output array
+        rows_new = np.zeros(len(rows))
+        # edges to be removed
+        M = np.random.binomial(int(k), q, size=N_tot)
+        for i in prange(N_tot):
+            # get indices of ones in column i
+            indices = np.where(columns==i)
+            row = rows[indices]
+            #print('input',row)
+            # take out diagonal
+            row_p = row[row!=i]
+            # draw edges to be deleted and delete
+            #print(row_p, row)
+            delete_indices = np.random.choice(len(row), size=min(2*M[i], len(row)), replace=False)
+            delete_indices = np.setdiff1d(delete_indices, np.where(row==i), assume_unique=True)
+            #delete_indices = delete_indices[delete_indices!=np.where(row==i)[0]]
+            #print(delete_indices)
+            row_remain = np.delete(row, delete_indices[:M[i]])
+            #print(row_remain)
+            #row[delete_indices]=0
+            # rewire edges to new heads
+            new_indices = np.random.choice(N_tot, size=min(int(3*M[i]), N_tot), replace=False)
+            #print(new_indices, row_remain)
+            # add diagonal to existing row indices
+            new_indices = np.setdiff1d(new_indices, row_remain, assume_unique=True)
+            #np.unique(np.append(new_indices, np.append(row_remain, i)))
+            #for item in row_remain:
+             #   new_indices = new_indices[new_indices != item]
+            #print(new_indices, 'm value',M[i])
+            #np.random.shuffle(new_indices)
+            #print(new_indices, type(new_indices))
+            #print(delete_indices, new_indices[:M[i]], i)
+            row[delete_indices[:M[i]]] = new_indices[:M[i]]
+            #print('output',row)
+            rows_new[indices] = row
+        return rows_new
+
+
+
+
+
+    @staticmethod
+    def fast_rewiring_directed_ith_row(L_0_i, N_tot, k, q, i):
         """
         Now we have to loop through all the rows.
         :param q:
         :return:
         """
         # edges to be removed
-        M = np.random.binomial(int(k/2), q)
+        M = np.random.binomial(int(k), q)
         # delete edges
         del_edges_indices = np.random.choice(np.arange(M), size=M, replace=False)
-        # find ones in upper triangle of matrix
         L_rnd_i = L_0_i
-        qs, values = find(L_0_i, k=1)
+        ps, qs, values = find(L_0_i)
+        # delete diagonal element
+        qs = qs[qs!=i]
+        #print(qs)
         qs_del = qs[del_edges_indices]
-        L_0_i[qs_del] = 0
+        #print('deleted',qs_del)
+        L_rnd_i[0,qs_del] = 0
         qs_not_del = np.setdiff1d(qs, qs_del)
+        # add the diagonal
+        qs_not_del = np.append(qs_not_del, i)
+        #print('not deleted',qs_not_del)
         # create new edges
-        new_indices = np.random.shuffle(np.arange(N_tot))
+        new_indices = np.arange(N_tot)
+        np.random.shuffle(new_indices)
+        #print(new_indices)
         new_indices = np.setdiff1d(new_indices, qs_not_del, assume_unique=True)
-        L_0_i[new_indices[:M]]
-        return L_0_i
+        #print('rewired',new_indices)
+        L_rnd_i[0,new_indices[:M]] = 1
+        return L_rnd_i
 
 
     def random_rewiring_undirected(self, q):
@@ -282,24 +346,37 @@ class build_matrix:
     @staticmethod
     def fast_second_largest(L_rnd, N_tot, directed=False):
         if directed:
-            k=L_rnd[0,0]
-            eigenvalues, eigenvectors = eigsh(1/k * L_rnd + 1.2 * identity(N_tot), k=8, which='LM')
+            k=abs(L_rnd[0,0])
+            eigenvalues, eigenvectors = eigs(1/k * L_rnd + 1.2 * identity(N_tot), k=8, which='LM')
+            eigenvalues = np.real(eigenvalues)
         else:
             D = diags(-1 / L_rnd.diagonal())
             # print(D.toarray())
             eigenvalues, eigenvectors = eigsh(D * L_rnd + 1.2 * identity(N_tot), k=8, which='LM')
+        #print('eigenvalues', eigenvalues-1.2)
         second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
         # print(eigenvalues)
         return second_largest - 1.2
 
 if __name__ == "__main__":
-    z = build_matrix('1d_ring_1000', np.array([1000, 1, 1]), 200)
+    k=1000
+    q=0.01
+    z = build_matrix('1d_ring_1000', np.array([10000, 1, 1]), k/2)
     z.all_indices()
     z.one_int_index_tuples_and_adjacency()
     z.Laplacian_0()
-    z.random_rewiring_undirected(0.7)
-    lam = z.second_largest_eigenvalue_normalized(8, 1.2)
-    print(lam)
+    rows, columns, values = find(z.L_0)
+    new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
+    L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
+    #L_rnd=lil_matrix((z.N_tot, z.N_tot))
+    #for i in range(z.N_tot):
+    #    L_rnd[i]=build_matrix.fast_rewiring_directed_ith_row(z.L_0.tolil().getrow(i), z.N_tot, k, q, i)
+    print(L_rnd.toarray())
+    #lam = build_matrix.fast_second_largest(L_rnd, z.N_tot, directed=True)
+    #print(lam)
+    #z.random_rewiring_undirected(0.7)
+    #lam = z.second_largest_eigenvalue_normalized(8, 1.2)
+    #print(lam)
     #print(z.L_rnd.toarray())
     #print(z.L_0.toarray())
 

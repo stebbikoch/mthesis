@@ -5,7 +5,7 @@ import statistics as st
 from analytics import analytics
 
 #f1 = open('./reproduce/reproduce_1001_undirected_analytics.txt', )
-f2 = open('./reproduce/reproduce_1000_directed_with_averaging.json', )
+f2 = open('./reproduce/reproduce_1000_directed_with_averaging_q1.json', )
 f3 = open('./reproduce/reproduce_1000_undirected_with_averaging.json', )
 # returns JSON object as
 # a dictionary
@@ -26,8 +26,8 @@ c=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
 #print(data2[str(k)][str(q)])
 for k in k_values:
     line1, =plt.plot(q_values, [instance.second_lam_one_dim(q=q, k=k)/k for q in q_values], label=r'k='+str(k))#, color=c[index])
-    line2, =plt.plot(q_values_1, [data2[str(k)][str(q)] for q in q_values_1], 'x', color=line1.get_color(), markerfacecolor='none')#, color=c[index])
-    line3, = plt.plot(q_values_1, [data3[str(k)][str(q)] for q in q_values_1], 'o', color=line1.get_color(),
+    line2, =plt.plot(q_values_1, [data2[str(k)][str(q)] for q in q_values_1], 'o', color=line1.get_color(), markerfacecolor='none')#, color=c[index])
+    line3, = plt.plot(q_values_1, [data3[str(k)][str(q)] for q in q_values_1], 'x', color=line1.get_color(),
                       markerfacecolor='none')
 plt.yscale('symlog', linthreshy=0.0001)
 plt.xscale('log')
