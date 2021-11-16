@@ -6,7 +6,7 @@ from scipy.sparse import identity
 from scipy.sparse.linalg import eigsh, eigs
 from scipy.sparse import *
 from numba import njit, jit, prange
-
+from multiprocessing import Pool, RawArray, Array, Process
 
 class integer_inequality:
     def __init__(self, N):
@@ -127,6 +127,44 @@ class build_matrix:
         """
         self.degree = self.numbers[self.important_index]
         self.L_0 = -self.degree*identity(self.N_tot) + self.A
+
+    @staticmethod
+    def mp_worker_directed(i, rows=None, columns=None, M=None, rows_new=None, N_tot=None):
+        """
+        lsödkfj
+        :return:
+        """
+        # get indices of ones in column i
+        indices = np.where(columns == i)
+        row = rows[indices]
+        # print('input',row)
+        # take out diagonal
+        row_p = row[row != i]
+        # draw edges to be deleted and delete
+        # print(row_p, row)
+        delete_indices = np.random.choice(len(row), size=min(2 * M[i], len(row)), replace=False)
+        delete_indices = np.setdiff1d(delete_indices, np.where(row == i), assume_unique=True)
+        row_remain = np.delete(row, delete_indices[:M[i]])
+        new_indices = np.random.choice(N_tot, size=min(int(3 * M[i]), N_tot), replace=False)
+        # add diagonal to existing row indices
+        new_indices = np.setdiff1d(new_indices, row_remain, assume_unique=True)
+        row[delete_indices[:M[i]]] = new_indices[:M[i]]
+        rows_new[indices] = row
+
+    @staticmethod
+    def mp_directed_rewiring(rows, columns, N_tot, k, q):
+        # input array
+        rowss = RawArray('d',rows)
+        print(rowss)
+        columnss = RawArray('d',columns)
+        new_rowss = Array('d',np.zeros(len(rows)))
+        # edges to be removed
+        Ms = RawArray('d',np.random.binomial(int(k), q, size=N_tot))
+        p = Process(target=build_matrix.mp_worker_directed, np.arange(N_tot).tolist(),rows=rowss, columns=columnss, M=Ms,
+                    new_rows=new_rowss, N_tot=N_tot)
+        p.start()
+        p.join()
+        return new_rowss
 
     @staticmethod
     #@jit#(parallel=True)
@@ -359,19 +397,20 @@ class build_matrix:
         return second_largest - 1.2
 
 if __name__ == "__main__":
-    k=1000
-    q=0.01
-    z = build_matrix('1d_ring_1000', np.array([10000, 1, 1]), k/2)
+    k=8
+    q=0.5
+    z = build_matrix('1d_ring_1000', np.array([100, 1, 1]), k/2)
     z.all_indices()
     z.one_int_index_tuples_and_adjacency()
     z.Laplacian_0()
     rows, columns, values = find(z.L_0)
-    new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
-    L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
+    new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
+    #new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
+    #L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
     #L_rnd=lil_matrix((z.N_tot, z.N_tot))
     #for i in range(z.N_tot):
     #    L_rnd[i]=build_matrix.fast_rewiring_directed_ith_row(z.L_0.tolil().getrow(i), z.N_tot, k, q, i)
-    print(L_rnd.toarray())
+    #print(L_rnd.toarray())
     #lam = build_matrix.fast_second_largest(L_rnd, z.N_tot, directed=True)
     #print(lam)
     #z.random_rewiring_undirected(0.7)
