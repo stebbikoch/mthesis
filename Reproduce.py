@@ -9,10 +9,22 @@ from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import eigs
 from scipy.sparse import identity
 import multiprocessing as mp
+#mp.set_start_method('fork')
 from functools import partial
 from numba import njit
 from scipy.sparse import *
 import time
+
+# try to solve issue with multiprocessing
+# from langdetect.detector_factory import init_factory
+# def worker_init_corpus(stops_in):
+#     global sess
+#     global stops
+#     sess = requests.Session()
+#     sess.mount("http://", HTTPAdapter(max_retries=10))
+#     stops = stops_in
+#     signal.signal(signal.SIGINT, signal.SIG_IGN)
+#     init_factory()
 
 def slow_directed(L_0, k, q, N_tot):
     L_rnd = lil_matrix((N_tot, N_tot))#-k*identity(N_tot)
