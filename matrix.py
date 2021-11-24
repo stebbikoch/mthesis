@@ -184,7 +184,7 @@ class build_matrix:
         rows_new = np.zeros(len(rows))
         # edges to be removed
         M = np.random.binomial(int(k), q, size=N_tot)
-        print(M[5])
+        #print(M[5])
         for i in range(N_tot):
             # get indices of ones in column i
             indices = np.where(columns==i)

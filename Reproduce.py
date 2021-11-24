@@ -40,7 +40,7 @@ def worker(q, L_0=None, k=None, N_tot=None, directed=False, numba=True, function
     #instance.random_rewiring_undirected(q)
     lam = build_matrix.fast_second_largest(L_rnd, N_tot, directed=directed)
     end = time.time()
-    print('execution time worker:', end-start)
+    #print('execution time worker:', end-start)
     return lam
 
 @njit()
@@ -70,7 +70,7 @@ def main(q_values, k_values, name, n, parallel=False, numba=False, directed=Fals
             if parallel:
                 with mp.Pool() as p:
                     lams=p.map(partial(worker, L_0=z.L_0, k=k, N_tot=z.N_tot, directed=directed, function=build_matrix.numba_fast_directed_rewiring), [q]*n)#, function=build_matrix.numba_fast_directed_rewiring),[q]*n)
-                print(lams)
+                #print(lams)
                 lams = [np.mean(np.array(lams)), np.std(np.array(lams))]
             elif numba:
                 lams = numba_func(q, z.L_0, k, z.N_tot, n)
@@ -86,7 +86,7 @@ def main(q_values, k_values, name, n, parallel=False, numba=False, directed=Fals
         print('one k done.', k)
     # save dictionary in json
     print('done', dictionary)
-    with open('./reproduce/' + name + '.json', 'w') as outfile:
+    with open(name + '.json', 'w') as outfile:
         json.dump(dictionary, outfile)
 
 
