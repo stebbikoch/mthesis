@@ -79,7 +79,7 @@ class build_matrix:
         self.important_index = np.where(self.d_0s == r_0)[0][-1]
         self.D_0 = self.all_indices_list[self.important_index]
         self.r_0 = r_0
-        print(self.D_0)
+        #print(self.D_0)
 
     def all_indices(self):
         """
@@ -95,7 +95,7 @@ class build_matrix:
                                            [(item[0]+i)%self.N[0], (item[1]+j)%self.N[1], (item[2]+k)%self.N[2]]]
                         tuples.append(tuple)
         self.tuples = tuples
-        print('edges', len(self.tuples))
+        #print('edges', len(self.tuples))
 
     def one_int_index_tuples_and_adjacency(self):
         array = np.array(self.tuples)
