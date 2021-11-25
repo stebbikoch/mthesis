@@ -81,6 +81,7 @@ class build_matrix:
         self.r_0 = r_0
         print(self.D_0)
 
+    @njit()
     def all_indices(self):
         """
         This function translates the indices from point (0,0) around and adds them to a new complete list
@@ -410,15 +411,15 @@ class build_matrix:
         return second_largest - 1.2
 
 if __name__ == "__main__":
-    k=8
-    q=0.5
-    z = build_matrix('1d_ring_1000', np.array([100, 1, 1]), k/2)
-    z.all_indices()
-    z.one_int_index_tuples_and_adjacency()
-    z.Laplacian_0()
-    rows, columns, values = find(z.L_0)
-    #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
-    new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
+    # k=8
+    # q=0.5
+    # z = build_matrix('1d_ring_1000', np.array([100, 1, 1]), k/2)
+    # z.all_indices()
+    # z.one_int_index_tuples_and_adjacency()
+    # z.Laplacian_0()
+    # rows, columns, values = find(z.L_0)
+    # #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
+    # new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
     #L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
     #L_rnd=lil_matrix((z.N_tot, z.N_tot))
     #for i in range(z.N_tot):
@@ -431,4 +432,8 @@ if __name__ == "__main__":
     #print(lam)
     #print(z.L_rnd.toarray())
     #print(z.L_0.toarray())
-
+    #x = integer_inequality(np.array([100, 100, 1]))
+    #x.all_numbers(49)
+    #x.save_to_json('2d_100_100')
+    z = build_matrix('2d_100_100', np.array([100, 100, 1]), 10)
+    z.all_indices()
