@@ -54,10 +54,10 @@ def numba_func(q, L_0, k, N_tot, n):
         lam[i] = build_matrix.fast_second_largest(L_rnd, N_tot)
     return np.mean(lam).tolist()
 
-def main(q_values, k_values, name, n, parallel=False, numba=False, directed=False):
+def main(q_values, k_values, filename, name, n, parallel=False, numba=False, directed=False):
     dictionary = {str(k):{str(q):[] for q in q_values} for k in k_values}
     for k in k_values:
-        z = build_matrix('1d_ring_1000', np.array([1000, 1, 1]), (k/2))
+        z = build_matrix(filename, np.array([1000, 1, 1]), k)
         #print(z.all_indices_list)
         z.all_indices()
         z.one_int_index_tuples_and_adjacency()
