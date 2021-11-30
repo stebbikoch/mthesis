@@ -7,6 +7,7 @@ from scipy.sparse.linalg import eigsh, eigs
 from scipy.sparse import *
 from numba import njit, jit, prange
 from multiprocessing import Pool, RawArray, Array, Process
+import time
 
 class integer_inequality:
     def __init__(self, N):
@@ -46,11 +47,14 @@ class integer_inequality:
                         indices.append([i,j,k])
         return degree, indices
 
-    def all_numbers(self, d_max):
+    def all_numbers(self, d_max, d_given=None):
         self.numbers = [0]
         self.indices = []
         self.d_0 = []
-        for d in range(d_max+1):
+        iterator = range(d_max+1)
+        if d_given:
+            iterator = d_given
+        for d in iterator:
             degree, indices =self.d_list(d)
             if not degree == self.numbers[-1]:
                 self.numbers.append(degree)
@@ -58,16 +62,16 @@ class integer_inequality:
                 self.d_0.append(d)
         self.numbers.pop(0)
         plt.step(self.d_0, self.numbers, where='post')
-        plt.show()
+        #plt.show()
 
     def save_to_json(self, name):
-        with open('./d_functions/'+name+'.txt', 'w') as outfile:
+        with open('./d_functions/'+name+'.json', 'w') as outfile:
             json.dump([self.numbers, self.indices, self.d_0], outfile)
 
 class build_matrix:
     def __init__(self, d_function, N, r_0):
         self.d_function = d_function # string name of d_function
-        f = open('./d_functions/'+self.d_function+'.txt', )
+        f = open('./d_functions/'+self.d_function+'.json', )
         # returns JSON object as
         # a dictionary
         data = json.load(f)
@@ -76,29 +80,38 @@ class build_matrix:
         self.d_0s = np.array(data[2])
         self.N = N
         self.N_tot = np.prod(N)
+        print(np.where(self.d_0s == r_0))
         self.important_index = np.where(self.d_0s == r_0)[0][-1]
         self.D_0 = self.all_indices_list[self.important_index]
         self.r_0 = r_0
-        print(self.D_0)
+        #print(self.D_0)
 
-    def all_indices(self):
+    @staticmethod
+    @njit(parallel=True)
+    def fast_all_indices(D_0, N):
         """
         This function translates the indices from point (0,0) around and adds them to a new complete list
         :return:
         """
-        tuples = []
-        for i in range(self.N[0]):
-            for j in range(self.N[1]):
-                for k in range(self.N[2]):
-                    for item in self.D_0:
-                        tuple = [[(0+i)%self.N[0],(0+j)%self.N[1], (0+k)%self.N[2]],
-                                           [(item[0]+i)%self.N[0], (item[1]+j)%self.N[1], (item[2]+k)%self.N[2]]]
-                        tuples.append(tuple)
-        self.tuples = tuples
-        print('edges', len(self.tuples))
+        tuples = np.zeros((np.prod(N)*len(D_0),2, 3))
+        counter = 0
+        for i in range(N[0]):
+            for j in range(N[1]):
+                for k in range(N[2]):
+                    for item in D_0:
+                        tuples[counter] = np.array([[(0+i)%N[0],(0+j)%N[1], (0+k)%N[2]],
+                                           [(item[0]+i)%N[0], (item[1]+j)%N[1], (item[2]+k)%N[2]]])
+                        counter += 1
+        #self.tuples = tuples
+        #print('edges', len(tuples))
+        return tuples
+
+    def all_indices(self):
+        self.tuples = build_matrix.fast_all_indices(np.array(self.D_0), self.N)
+        print('done, tuples made')
 
     def one_int_index_tuples_and_adjacency(self):
-        array = np.array(self.tuples)
+        array = self.tuples
         left_is = array[:, 0, 0]
         left_js = array[:, 0, 1]
         left_ks = array[:, 0, 2]
@@ -184,7 +197,7 @@ class build_matrix:
         rows_new = np.zeros(len(rows))
         # edges to be removed
         M = np.random.binomial(int(k), q, size=N_tot)
-        print(M[5])
+        #print(M[5])
         for i in range(N_tot):
             # get indices of ones in column i
             indices = np.where(columns==i)
@@ -410,15 +423,15 @@ class build_matrix:
         return second_largest - 1.2
 
 if __name__ == "__main__":
-    k=8
-    q=0.5
-    z = build_matrix('1d_ring_1000', np.array([100, 1, 1]), k/2)
-    z.all_indices()
-    z.one_int_index_tuples_and_adjacency()
-    z.Laplacian_0()
-    rows, columns, values = find(z.L_0)
-    #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
-    new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
+    # k=8
+    # q=0.5
+    # z = build_matrix('1d_ring_1000', np.array([100, 1, 1]), k/2)
+    # z.all_indices()
+    # z.one_int_index_tuples_and_adjacency()
+    # z.Laplacian_0()
+    # rows, columns, values = find(z.L_0)
+    # #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
+    # new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
     #L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
     #L_rnd=lil_matrix((z.N_tot, z.N_tot))
     #for i in range(z.N_tot):
@@ -431,4 +444,11 @@ if __name__ == "__main__":
     #print(lam)
     #print(z.L_rnd.toarray())
     #print(z.L_0.toarray())
+    #x = integer_inequality(np.array([100, 100, 100]))
+    #x.all_numbers(49, d_given=[2,4,10,20,25,30,40])
+    #x.save_to_json('3d_100_100_100')
+    #plt.show()
+    z = build_matrix('3d_100_100_100', np.array([100, 100, 100]), 4)
+    z.all_indices()
 
+    #z.one_int_index_tuples_and_adjacency()
