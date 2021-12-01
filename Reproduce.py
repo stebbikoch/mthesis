@@ -9,7 +9,7 @@ from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import eigs
 from scipy.sparse import identity
 import multiprocessing as mp
-mp.set_start_method('spawn')
+#mp.set_start_method('spawn')
 #mp.set_start_method('fork')
 from functools import partial
 from numba import njit
