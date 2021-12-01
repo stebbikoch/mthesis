@@ -17,10 +17,10 @@ if __name__=='__main__':
      start = time.time()
      exponent = np.arange(16)
      q_values = 10 ** (-exponent / 3)
-     #q_values = [0.01, 0.1, 1]
-     r_0_values = [10,25,50,100, 200, 400]
-     main(q_values, r_0_values, '1d_ring_1000','../../home/results/ring_directed',
-          100,np.array([1000, 1, 1]),
+     q_values = [0.01, 0.1, 1]
+     r_0_values = [400]
+     main(q_values, r_0_values, '1d_ring_1000','../../home/results/ring_directed_test',
+          1,np.array([1000, 1, 1]),
           parallel=True, directed=True)
      end = time.time()
      print('zeit ', end-start)

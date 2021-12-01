@@ -65,6 +65,8 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
                 with mp.Pool() as p:
                     lams=p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
                                        function=build_matrix.numba_fast_directed_rewiring), [q]*n)
+                    p.close() # no more tasks
+                    p.join() # wrap up current tasks
                 #print(lams)
                 lams = [np.mean(np.array(lams)), np.std(np.array(lams))]
             else:
