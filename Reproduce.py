@@ -9,6 +9,7 @@ from scipy.sparse.linalg import eigsh
 from scipy.sparse.linalg import eigs
 from scipy.sparse import identity
 import multiprocessing as mp
+mp.set_start_method('spawn')
 #mp.set_start_method('fork')
 from functools import partial
 from numba import njit
@@ -62,7 +63,7 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
             print('q: ', q)
             # do the same thing n times
             if parallel:
-                with mp.Pool(processes=20) as p:
+                with mp.Pool(processes=16) as p:
                     lams=p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
                                        function=build_matrix.numba_fast_directed_rewiring), [q]*n)
                     p.close() # no more tasks
