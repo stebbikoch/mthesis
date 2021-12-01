@@ -15,6 +15,7 @@ from functools import partial
 from numba import njit
 from scipy.sparse import *
 import time
+import tqdm
 
 
 def slow_directed(L_0, k, q, N_tot):
@@ -63,11 +64,17 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
             print('q: ', q)
             # do the same thing n times
             if parallel:
-                with mp.Pool(processes=16) as p:
-                    lams=p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
-                                       function=build_matrix.numba_fast_directed_rewiring), [q]*n)
+                p = mp.Pool()
+                results = []
+                for result in tqdm.tqdm(p.imap_unordered(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
+                                       function=build_matrix.numba_fast_directed_rewiring), [q]*n), total=n):
+                    results.append(result)
+                #with mp.Pool(processes=16) as p:
+                 #   lams=p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
+                  #                     function=build_matrix.numba_fast_directed_rewiring), [q]*n)
                     p.close() # no more tasks
                     p.join() # wrap up current tasks
+                lams = results
                 #print(lams)
                 lams = [np.mean(np.array(lams)), np.std(np.array(lams))]
             else:
