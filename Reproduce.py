@@ -2,6 +2,7 @@ from matrix import build_matrix
 import json
 from matrix import integer_inequality
 import numpy as np
+import concurrent.futures as cf
 from scipy.sparse import coo_matrix, csr_matrix, lil_matrix
 from matplotlib import pyplot as plt
 import scipy.sparse
@@ -64,16 +65,23 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
             print('q: ', q)
             # do the same thing n times
             if parallel:
-                p = mp.Pool()
+                p = cf.ProcessPoolExecutor()
                 results = []
-                for result in tqdm.tqdm(p.imap_unordered(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
-                                       function=build_matrix.numba_fast_directed_rewiring), [q]*n), total=n):
+                for result in tqdm.tqdm(
+                        p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
+                                                 function=build_matrix.numba_fast_directed_rewiring), [q] * n),
+                        total=n):
                     results.append(result)
+                # p = mp.Pool()
+                # results = []
+                # for result in tqdm.tqdm(p.imap_unordered(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
+                #                        function=build_matrix.numba_fast_directed_rewiring), [q]*n), total=n):
+                #     results.append(result)
                 #with mp.Pool(processes=16) as p:
                  #   lams=p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
                   #                     function=build_matrix.numba_fast_directed_rewiring), [q]*n)
-                    p.close() # no more tasks
-                    p.join() # wrap up current tasks
+                    #p.close() # no more tasks
+                    #p.join() # wrap up current tasks
                 lams = results
                 #print(lams)
                 lams = [np.mean(np.array(lams)), np.std(np.array(lams))]
@@ -97,6 +105,6 @@ if __name__ == '__main__':
     #q_values = [0.1]#[1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
     k_values = [10, 25, 50]#, 50, 100, 200, 400, 800]
     start = time.time()
-    main(q_values, k_values, '1d_ring_1000','reproduce/test_2d', 1, np.array([1000, 1, 1]), parallel=True, directed=False)
+    main(q_values, k_values, '1d_ring_1000','reproduce/test_2d', 5, np.array([1000, 1, 1]), parallel=True, directed=False)
     stop = time.time()
     print(stop-start)
