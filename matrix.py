@@ -71,7 +71,10 @@ class integer_inequality:
 class build_matrix:
     def __init__(self, d_function, N, r_0):
         self.d_function = d_function # string name of d_function
-        f = open('./d_functions/'+self.d_function+'.json', )
+        try:
+            f = open('./d_functions/'+self.d_function+'.json', )
+        except:
+            f = open('./d_functions/'+self.d_function+'.txt', )
         # returns JSON object as
         # a dictionary
         data = json.load(f)
@@ -86,6 +89,7 @@ class build_matrix:
         self.D_0 = self.all_indices_list[self.important_index]
         #print('len', len(self.D_0), len(self.D_0[0]))
         self.r_0 = r_0
+        self.k = len(self.D_0)/2
         #print(self.D_0)
 
     @staticmethod
