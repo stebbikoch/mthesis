@@ -80,11 +80,13 @@ class build_matrix:
         self.d_0s = np.array(data[2])
         self.N = N
         self.N_tot = np.prod(N)
-        print(np.where(self.d_0s == r_0))
+        #print(np.where(self.d_0s == r_0))
         self.important_index = np.where(self.d_0s == r_0)[0][-1]
+        #print(self.all_indices_list, self.important_index)
         self.D_0 = self.all_indices_list[self.important_index]
+        #print('len', len(self.D_0), len(self.D_0[0]))
         self.r_0 = r_0
-        print(self.D_0)
+        #print(self.D_0)
 
     @staticmethod
     @njit(parallel=True)
@@ -99,6 +101,10 @@ class build_matrix:
             for j in range(N[1]):
                 for k in range(N[2]):
                     for item in D_0:
+                        #print(D_0)
+                        #print('item', item)
+                        #print('adf',tuples[counter], np.array([[(0+i)%N[0],(0+j)%N[1], (0+k)%N[2]],
+                                           #[(item[0]+i)%N[0], (item[1]+j)%N[1], (item[2]+k)%N[2]]]))
                         tuples[counter] = np.array([[(0+i)%N[0],(0+j)%N[1], (0+k)%N[2]],
                                            [(item[0]+i)%N[0], (item[1]+j)%N[1], (item[2]+k)%N[2]]])
                         counter += 1
@@ -430,25 +436,26 @@ if __name__ == "__main__":
     # z.one_int_index_tuples_and_adjacency()
     # z.Laplacian_0()
     # rows, columns, values = find(z.L_0)
-    # #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
-    # new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
-    #L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
-    #L_rnd=lil_matrix((z.N_tot, z.N_tot))
-    #for i in range(z.N_tot):
-    #    L_rnd[i]=build_matrix.fast_rewiring_directed_ith_row(z.L_0.tolil().getrow(i), z.N_tot, k, q, i)
-    #print(L_rnd.toarray())
-    #lam = build_matrix.fast_second_largest(L_rnd, z.N_tot, directed=True)
-    #print(lam)
-    #z.random_rewiring_undirected(0.7)
-    #lam = z.second_largest_eigenvalue_normalized(8, 1.2)
-    #print(lam)
+    #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
+    new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
+    L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
+    L_rnd=lil_matrix((z.N_tot, z.N_tot))
+    for i in range(z.N_tot):
+       L_rnd[i]=build_matrix.fast_rewiring_directed_ith_row(z.L_0.tolil().getrow(i), z.N_tot, k, q, i)
+    print(L_rnd.toarray())
+    lam = build_matrix.fast_second_largest(L_rnd, z.N_tot, directed=True)
+    print(lam)
+    z.random_rewiring_undirected(0.7)
+    lam = z.second_largest_eigenvalue_normalized(8, 1.2)
+    print(lam)
     #print(z.L_rnd.toarray())
     #print(z.L_0.toarray())
     x = integer_inequality(np.array([100, 100, 1]))
     x.all_numbers(49)
     x.save_to_json('2d_100_100')
     #plt.show()
-    z = build_matrix('2d_100_100', np.array([100, 100, 1]), 4)
-    z.all_indices()
+    #z = build_matrix('3d_40_40_40', np.array([40, 40, 40]), 5)
+    #z.tuples = z.fast_all_indices(np.array(z.D_0), z.N)
+    #z.all_indices()
 
     #z.one_int_index_tuples_and_adjacency()
