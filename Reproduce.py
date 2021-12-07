@@ -1,47 +1,40 @@
 from matrix import build_matrix
 import json
-from matrix import integer_inequality
+#from matrix import integer_inequality
 import numpy as np
-import concurrent.futures as cf
-from scipy.sparse import coo_matrix, csr_matrix, lil_matrix
-from matplotlib import pyplot as plt
-import scipy.sparse
-from scipy.sparse.linalg import eigsh
-from scipy.sparse.linalg import eigs
-from scipy.sparse import identity
-import multiprocessing as mp
+
+try:
+    from mpi4py.futures import MPIPoolExecutor as PoolExecutor
+except:
+    from concurrent.futures import ProcessPoolExecutor as PoolExecutor
+    print('Imported concurrent module instead of MPI.')
+#from scipy.sparse import coo_matrix, csr_matrix, lil_matrix
+#from matplotlib import pyplot as plt
+#import scipy.sparse
+#from scipy.sparse.linalg import eigsh
+#from scipy.sparse.linalg import eigs
+#from scipy.sparse import identity
+#import multiprocessing as mp
 #mp.set_start_method('spawn')
 #mp.set_start_method('fork')
 from functools import partial
-from numba import njit
+#from numba import njit
 from scipy.sparse import *
 import time
 import tqdm
 
 
-def slow_directed(L_0, k, q, N_tot):
-    L_rnd = lil_matrix((N_tot, N_tot))#-k*identity(N_tot)
-    for i in range(N_tot):
-        L_rnd[i] = build_matrix.fast_rewiring_directed_ith_row(L_0.tolil().getrow(i), N_tot, k, q, i)
-    return L_rnd
-        #with mp.Pool(processes=N_tot) as p:
-         #   lams = p.map(partial(worker, L_0=z.L_0, k=k, N_tot=z.N_tot), [q] * n)
-
-
-def worker(q, L_0=None, k=None, N_tot=None, directed=False, numba=True, function=None):
+def worker(q, L_0=None, k=None, N_tot=None, directed=False, function=None):
     start = time.time()
     # new seed
     np.random.seed()
     if directed:
-        if numba:
-            rows, columns, values = find(L_0)
-            new_rows = function(rows, columns, N_tot, k, q)
-            #new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, N_tot, k, q)
-            L_rnd = csr_matrix((values, (new_rows, columns)), shape=(N_tot, N_tot))
-        else:
-            L_rnd=slow_directed(L_0, k, q, N_tot)
+        rows, columns, values = find(L_0)
+        new_rows = function(rows, columns, N_tot, k, q)
+        #new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, N_tot, k, q)
+        L_rnd = csr_matrix((values, (new_rows, columns)), shape=(N_tot, N_tot))
     else:
-        L_rnd=build_matrix.fast_rewiring(L_0, k, q, N_tot)
+        L_rnd=build_matrix.fast_rewiring_undirected(L_0, k, q, N_tot, save_mem=True)
     #instance.random_rewiring_undirected(q)
     lam = build_matrix.fast_second_largest(L_rnd, N_tot, directed=directed)
     end = time.time()
@@ -61,11 +54,13 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
             # call function to precompile
             rows, columns, values = find(z.L_0)
             build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, z.k, 0.001)
+        else:
+            build_matrix.fast_rewiring_undirected(z.L_0, z.k, 0.001, z.N_tot, save_mem=True)
         for q in q_values:
             print('q: ', q)
             # do the same thing n times
             if parallel:
-                p = cf.ProcessPoolExecutor()
+                p = PoolExecutor()
                 results = []
                 for result in tqdm.tqdm(
                         p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,

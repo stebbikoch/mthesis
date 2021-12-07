@@ -12,3 +12,5 @@ __pycache__/
 *.png
 *.svg
 *.ipynb
+script*.py
+script.py
