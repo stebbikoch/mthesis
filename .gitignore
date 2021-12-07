@@ -4,6 +4,7 @@ matrices/
 reproduce/
 pictures/
 env/
+results/
 __pycache__/
 .ipynb_checkpoints/
 .idea/
@@ -12,3 +13,7 @@ __pycache__/
 *.png
 *.svg
 *.ipynb
+*.out
+script*.py
+script.py
+*.sh
