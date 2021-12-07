@@ -13,7 +13,9 @@ __pycache__/
 *.png
 *.svg
 *.ipynb
+<<<<<<< HEAD
 *.out
 script*.py
 script.py
 *.sh
+
