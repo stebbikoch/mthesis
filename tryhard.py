@@ -13,6 +13,7 @@ def func(p, d):
     print(output)
 
 if __name__=='__main__':
-    print(np.sin(np.pi/2))
+    #print(np.sin(np.pi/2))
     #d = 6
     #func(np.array([1, 0, 0])/(2*d+1), d)
+    print('Hello World!')

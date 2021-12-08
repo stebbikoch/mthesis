@@ -2,9 +2,10 @@ from matrix import build_matrix
 import json
 #from matrix import integer_inequality
 import numpy as np
-from mpi4py import MPI
-
-
+try:
+    from mpi4py import MPI
+except:
+    pass
 try:
     from mpi4py.futures import MPIPoolExecutor as PoolExecutor
 except:
@@ -27,8 +28,11 @@ import tqdm
 
 
 def worker(q, L_0=None, k=None, N_tot=None, directed=False, function=None):
-    comm = MPI.COMM_WORLD
-    print("%d of %d" % (comm.Get_rank(), comm.Get_size()))
+    try:
+        comm = MPI.COMM_WORLD
+        print("%d of %d" % (comm.Get_rank(), comm.Get_size()))
+    except:
+        pass
     start = time.time()
     # new seed
     np.random.seed()
@@ -49,7 +53,7 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
     dictionary = {str(r_0):{str(q):[] for q in q_values} for r_0 in r_0_values}
     for r_0 in r_0_values:
         print('r_0: ', r_0)
-        # time3=time.time()
+        time3=time.time()
         z = build_matrix(filename, dimensions, r_0)
         #print(z.all_indices_list)
         z.tuples=build_matrix.fast_all_indices(np.array(z.D_0), z.N)
@@ -69,7 +73,6 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
                 with PoolExecutor(max_workers=processes) as p:
                 	results = p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
                                                  function=build_matrix.numba_fast_directed_rewiring), [q] * n)
-                print('results',results)
                 #results = []
                 #for result in tqdm.tqdm(
                 #        p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
@@ -87,7 +90,7 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
                   #                     function=build_matrix.numba_fast_directed_rewiring), [q]*n)
                     #p.close() # no more tasks
                     #p.join() # wrap up current tasks
-                lams = results
+                lams = np.array(list(results))
                 #print(lams)
                 lams = [np.mean(lams), np.std(lams)]
             else:
@@ -99,8 +102,8 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
             print('time for previous q: ', time2-time1)
             #print('value of lams',lams)
             dictionary[str(r_0)][str(q)] = lams
-    	#time4=time.time()
-    	#print('time for previous r_0: ', time4-time3)
+        time4 = time.time()
+        print('time for previous r_0: ', time4-time3)
     # save dictionary in json
     print('done', dictionary)
     with open(name + '.json', 'w') as outfile:
