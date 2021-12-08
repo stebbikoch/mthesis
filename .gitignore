@@ -18,4 +18,4 @@ __pycache__/
 script*.py
 script.py
 *.sh
-
+*.swp
