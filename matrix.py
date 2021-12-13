@@ -93,7 +93,7 @@ class build_matrix:
         #print(self.D_0)
 
     @staticmethod
-    @njit(parallel=True)
+    @njit()
     def fast_all_indices(D_0, N):
         """
         This function translates the indices from point (0,0) around and adds them to a new complete list
