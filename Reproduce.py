@@ -2,26 +2,7 @@ from matrix import build_matrix
 import json
 #from matrix import integer_inequality
 import numpy as np
-try:
-    from mpi4py import MPI
-except:
-    pass
-try:
-    from mpi4py.futures import MPIPoolExecutor as PoolExecutor
-except:
-    from concurrent.futures import ProcessPoolExecutor as PoolExecutor
-    print('Imported concurrent module instead of MPI.')
-#from scipy.sparse import coo_matrix, csr_matrix, lil_matrix
-#from matplotlib import pyplot as plt
-#import scipy.sparse
-#from scipy.sparse.linalg import eigsh
-#from scipy.sparse.linalg import eigs
-#from scipy.sparse import identity
-#import multiprocessing as mp
-#mp.set_start_method('spawn')
-#mp.set_start_method('fork')
-from functools import partial
-#from numba import njit
+from mpi4py import MPI
 from scipy.sparse import *
 import time
 import tqdm
