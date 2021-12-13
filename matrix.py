@@ -99,7 +99,6 @@ class build_matrix:
         This function translates the indices from point (0,0) around and adds them to a new complete list
         :return:
         """
-        print('change 2 subimitted.')
         tuples = np.zeros((np.prod(N)*len(D_0),2, 3))
         counter = 0
         for i in range(N[0]):
@@ -107,15 +106,9 @@ class build_matrix:
                 for k in range(N[2]):
                     for f in range(len(D_0)):
                         item = D_0[f]
-                        #print(D_0)
-                        #print('item', item)
-                        #print('adf',tuples[counter], np.array([[(0+i)%N[0],(0+j)%N[1], (0+k)%N[2]],
-                                           #[(item[0]+i)%N[0], (item[1]+j)%N[1], (item[2]+k)%N[2]]]))
                         tuples[counter] = np.array([[(0+i)%N[0],(0+j)%N[1], (0+k)%N[2]],
                                            [(item[0]+i)%N[0], (item[1]+j)%N[1], (item[2]+k)%N[2]]])
                         counter += 1
-        #self.tuples = tuples
-        #print('edges', len(tuples))
         return tuples
 
     def all_indices(self):
