@@ -24,7 +24,7 @@ def main(q_values, r_0_values, filename, name, dimensions, directed=False):
     rank = comm.Get_rank()
     # set seed
     np.random.seed(rank)
-    dictionary = {str(r_0):{str(q)[:6]:float() for q in q_values} for r_0 in r_0_values}
+    dictionary = {str(r_0):{str(q):float() for q in q_values} for r_0 in r_0_values}
     # go through r_0 and q values
     for r_0 in r_0_values:
         time3=time.time()
@@ -41,8 +41,8 @@ def main(q_values, r_0_values, filename, name, dimensions, directed=False):
     data = comm.gather(dictionary, root=0)
     if rank==0:
         print('gathered {} processes.'.format(len(data)))
-        longdict={str(r_0):{str(q)[:6]:[] for q in q_values} for r_0 in r_0_values}
-        shortdict={str(r_0):{str(q)[:6]:[] for q in q_values} for r_0 in r_0_values}
+        longdict={str(r_0):{str(q):[] for q in q_values} for r_0 in r_0_values}
+        shortdict={str(r_0):{str(q):[] for q in q_values} for r_0 in r_0_values}
         for r_0 in r_0_values:
             for q in q_values:
                 lams=[]
