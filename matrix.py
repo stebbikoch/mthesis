@@ -362,34 +362,6 @@ class build_matrix:
         return second_largest - 1.2
 
 if __name__ == "__main__":
-    # k=8
-    # q=0.5
-    z = build_matrix('1d_ring_1000', np.array([100, 1, 1]), 20)
-    z.all_indices()
-    z.one_int_index_tuples_and_adjacency()
-    z.Laplacian_0()
-    z.fast_rewiring_undirected(z.L_0,z.k, 0.1, z.N_tot, save_mem=True)
-    # rows, columns, values = find(z.L_0)
-    #new_rows = build_matrix.mp_directed_rewiring(rows, columns, z.N_tot, k, q)
-    # new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, k, q)
-    # L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
-    # L_rnd=lil_matrix((z.N_tot, z.N_tot))
-    # for i in range(z.N_tot):
-    #    L_rnd[i]=build_matrix.fast_rewiring_directed_ith_row(z.L_0.tolil().getrow(i), z.N_tot, k, q, i)
-    # print(L_rnd.toarray())
-    # lam = build_matrix.fast_second_largest(L_rnd, z.N_tot, directed=True)
-    # print(lam)
-    # z.random_rewiring_undirected(0.7)
-    # lam = z.second_largest_eigenvalue_normalized(8, 1.2)
-    # print(lam)
-    # #print(z.L_rnd.toarray())
-    # #print(z.L_0.toarray())
-    # x = integer_inequality(np.array([100, 100, 1]))
-    # x.all_numbers(49)
-    # x.save_to_json('2d_100_100')
-    #plt.show()
-    #z = build_matrix('3d_40_40_40', np.array([40, 40, 40]), 5)
-    #z.tuples = z.fast_all_indices(np.array(z.D_0), z.N)
-    #z.all_indices()
-
-    #z.one_int_index_tuples_and_adjacency()
+    x = integer_inequality(np.array([100, 100, 1]))
+    x.all_numbers(49)
+    x.save_to_json('2d_100_100_1')
