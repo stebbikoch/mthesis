@@ -34,8 +34,6 @@ def worker(q, L_0=None, k=None, N_tot=None, directed=False, function=None):
     except:
         pass
     start = time.time()
-    # new seed
-    np.random.seed()
     if directed:
         rows, columns, values = find(L_0)
         new_rows = function(rows, columns, N_tot, k, q)
@@ -50,64 +48,56 @@ def worker(q, L_0=None, k=None, N_tot=None, directed=False, function=None):
     return lam
 
 def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, directed=False, processes=1):
-    dictionary = {str(r_0):{str(q):[] for q in q_values} for r_0 in r_0_values}
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    # set seed
+    np.random.seed(rank)
+    counter=0
+    dictionary = {str(r_0):{str(q)[:4]:float() for q in q_values} for r_0 in r_0_values}
     for r_0 in r_0_values:
-        print('r_0: ', r_0)
+        #print('r_0: ', r_0)
         time3=time.time()
         z = build_matrix(filename, dimensions, r_0)
         #print(z.all_indices_list)
         z.tuples=build_matrix.fast_all_indices(np.array(z.D_0), z.N)
         z.one_int_index_tuples_and_adjacency()
         z.Laplacian_0()
-        if directed:
+        if counter==0:
             # call function to precompile
             rows, columns, values = find(z.L_0)
             build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, z.k, 0.001)
-        else:
-            build_matrix.fast_rewiring_undirected(z.L_0, z.k, 0.001, z.N_tot, save_mem=True)
+            counter+=1
         for q in q_values:
             print('q: ', q)
             time1 = time.time()
             # do the same thing n times
-            if parallel:
-                with PoolExecutor(max_workers=processes) as p:
-                	results = p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
-                                                 function=build_matrix.numba_fast_directed_rewiring), [q] * n)
-                #results = []
-                #for result in tqdm.tqdm(
-                #        p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
-                #                                 function=build_matrix.numba_fast_directed_rewiring), [q] * n),
-                #        total=n):
-                #    results.append(result)
-                #p.shutdown()
-                # p = mp.Pool()
-                # results = []
-                # for result in tqdm.tqdm(p.imap_unordered(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
-                #                        function=build_matrix.numba_fast_directed_rewiring), [q]*n), total=n):
-                #     results.append(result)
-                #with mp.Pool(processes=16) as p:
-                 #   lams=p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
-                  #                     function=build_matrix.numba_fast_directed_rewiring), [q]*n)
-                    #p.close() # no more tasks
-                    #p.join() # wrap up current tasks
-                lams = np.array(list(results))
-                #print(lams)
-                lams = [np.mean(lams), np.std(lams)]
-            else:
-                lams = np.zeros(n)
-                for i in range(n):
-                    lams[i]=worker(q, z.L_0, k=k, N_tot=z.N_tot, directed=True)
-                lams=np.mean(lams).tolist()
+            lam=worker(q, L_0 = z.L_0, k = z.k, N_tot = z.N_tot, directed = directed,
+            function = build_matrix.numba_fast_directed_rewiring)
             time2=time.time()
             print('time for previous q: ', time2-time1)
             #print('value of lams',lams)
-            dictionary[str(r_0)][str(q)] = lams
+            dictionary[str(r_0)][str(q)] = lam
         time4 = time.time()
-        print('time for previous r_0: ', time4-time3)
-    # save dictionary in json
-    print('done', dictionary)
-    with open(name + '.json', 'w') as outfile:
-        json.dump(dictionary, outfile)
+        #print('time for previous r_0: ', time4-time3)
+    # gather processes
+    data = comm.gather(dictionary, root=0)
+    if rank==0:
+        print('gathered processes.', len(data))
+        longdict={str(r_0):{str(q)[:4]:[] for q in q_values} for r_0 in r_0_values}
+        shortdict={str(r_0):{str(q)[:4]:[] for q in q_values} for r_0 in r_0_values}
+        for r_0 in r_0_values:
+            for q in q_values:
+                lams=[]
+                for i in range(len(data)):
+                    lams.append(data[i][str(r_0)][str(q)])
+                longdict[str(r_0)][str(q)] = lams
+                shortdict[str(r_0)][str(q)] = [np.mean(np.array(lams)), np.std(np.array(lams))]
+        # save dictionary in json
+        # print('done', dictionary)
+        with open(name + 'long' + '.json', 'w') as outfile:
+            json.dump(longdict, outfile)
+        with open(name + 'short' + '.json', 'w') as outfile:
+            json.dump(shortdict, outfile)
 
 
 if __name__ == '__main__':
