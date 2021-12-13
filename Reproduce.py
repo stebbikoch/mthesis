@@ -73,6 +73,8 @@ def main(q_values, r_0_values, filename, name, n, dimensions, parallel=False, di
                 with PoolExecutor(max_workers=processes) as p:
                 	results = p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,
                                                  function=build_matrix.numba_fast_directed_rewiring), [q] * n)
+                	print('do shutdown and join')
+                	p.shutdown(wait=False)
                 #results = []
                 #for result in tqdm.tqdm(
                 #        p.map(partial(worker, L_0=z.L_0, k=z.k, N_tot=z.N_tot, directed=directed,

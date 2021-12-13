@@ -19,3 +19,4 @@ script*.py
 script.py
 *.sh
 *.swp
+*.txt
