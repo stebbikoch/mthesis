@@ -30,9 +30,10 @@ class fibonacci_sphere:
             counter += len(indices)
         edges = edges[:counter].astype(int)
         # now build regular sparse matrix
-        L_rnd = csr_matrix((np.ones(len(edges)), (edges[:,0], edges[:,1])))
-        L_rnd += csr_matrix((-np.ones(len(edges)), (edges[:, 0], edges[:, 0])))
-        return L_rnd
+        L_0 = csr_matrix((np.ones(len(edges)), (edges[:,0], edges[:,1])))
+        L_0 += csr_matrix((-np.ones(len(edges)), (edges[:, 0], edges[:, 0])))
+        self.L_0 = L_0
+        return L_0
 
 
 # Functions from @Mateen Ulhaq and @karlo

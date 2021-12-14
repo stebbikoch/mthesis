@@ -69,7 +69,8 @@ def main(q_values, r_0_values, filename, name, dimensions, directed=False):
 if __name__ == '__main__':
     exponent = np.arange(16)
     q_values = 10 ** (-exponent / 3)
+    q_values = [0.7]
     #q_values = [1, 0.1, 0.01]#, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
     #q_values = [0.1]#[1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-    k_values = [10]#[10, 25, 50]#, 50, 100, 200, 400, 800]
-    main(q_values, k_values, '1d_ring_1000','reproduce/test_ring_verification', np.array([1000, 1, 1]), directed=False)
+    r_0_values = [45]#[10, 25, 50]#, 50, 100, 200, 400, 800]
+    main(q_values, r_0_values, '2d_100_100_1','reproduce/test_2d', np.array([100, 100, 1]), directed=False)

@@ -6,9 +6,9 @@ from analytics import analytics
 
 #f1 = open('./reproduce/reproduce_1001_undirected_analytics.txt', )
 f3 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-          's8583916-stefans_ws/mthesis/results/1000ring_undirected_100xshort.json')
+          's8583916-stefans_ws/mthesis/results/1000ring_sl_undirected_100xshort.json')
 f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-          's8583916-stefans_ws/mthesis/results/1000ring_directed_100xshort.json')
+          's8583916-stefans_ws/mthesis/results/1000ring_sl_directed_100xshort.json')
 #f2 = open('./reproduce/reproduce_1000_directed_with_averaging_test_big_q.json', )
 #f3 = open('./reproduce/reproduce_1000_undirected_with_averaging_test_big_q.json', )
 # returns JSON object as
@@ -41,10 +41,11 @@ plt.xscale('log')
 plt.xlabel(r'Small-world parameter $q$')
 plt.ylabel(r'Value of normalized second largest eigenvalue')
 legend1 = plt.legend([line1, line2, line3], [r"Analytical prediction", r"Numerical results directed", r'Numerical results undirected'])
-plt.legend(loc=(0.8, 0.5))
+plt.legend(loc=7)
 plt.gca().add_artist(legend1)
 plt.grid()
 plt.tight_layout()
 #axs[1].set_yscale('symlog')
 #axs[1].set_xscale('log')
-plt.show()
+plt.savefig('figures/1000ring_100x.svg', format='svg', dpi=1000)
+#plt.show()

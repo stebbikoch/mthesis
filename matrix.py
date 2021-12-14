@@ -362,6 +362,6 @@ class build_matrix:
         return second_largest - 1.2
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([100, 100, 1]))
-    x.all_numbers(49)
-    x.save_to_json('2d_100_100_1')
+    x = integer_inequality(np.array([100, 100, 100]))
+    x.all_numbers(49, d_given=[3, 5, 15, 25, 35, 45])
+    x.save_to_json('3d_100_100_100')
