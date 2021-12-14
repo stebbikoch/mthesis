@@ -89,7 +89,7 @@ class build_matrix:
         self.D_0 = self.all_indices_list[self.important_index]
         #print('len', len(self.D_0), len(self.D_0[0]))
         self.r_0 = r_0
-        self.k = len(self.D_0)/2
+        self.k = len(self.D_0)
         #print(self.D_0)
 
     @staticmethod
