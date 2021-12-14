@@ -8,7 +8,6 @@ import time
 import os
 import tqdm
 
-
 def worker(q, L_0=None, k=None, N_tot=None, directed=False):
     if directed:
         rows, columns, values = find(L_0)
@@ -57,10 +56,10 @@ def main(q_values, r_0_values, filename, name, dimensions, directed=False):
         # remove result file, if exists
         filepathlong = name + 'long' + '.json'
         filepathshort = name + 'short' + '.json'
-        #if os.path.exists(filepathlong):
-         #   os.remove(filepathlong)
-        #if os.path.exists(filepathshort):
-         #   os.remove(filepathshort)
+        if os.path.exists(filepathlong):
+            os.remove(filepathlong)
+        if os.path.exists(filepathshort):
+            os.remove(filepathshort)
         with open(filepathlong, 'w') as outfile:
             json.dump(longdict, outfile)
         with open(filepathshort, 'w') as outfile:
