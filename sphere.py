@@ -23,8 +23,10 @@ class fibonacci_sphere:
         edges = np.zeros((self.N*(self.N-1), 2))
         counter = 0
         for i in range(self.N):
-            distances = np.sqrt(
-                2 - 2 * (np.sin(self.theta[i]) * np.sin(self.theta) * np.cos(self.phi[i] - self.phi) + np.cos(self.theta[i]) * np.cos(self.theta)))
+            arg = 2 - 2 * (np.sin(self.theta[i]) * np.sin(self.theta) * np.cos(self.phi[i] - self.phi) + np.cos(self.theta[i]) * np.cos(self.theta))
+            assert np.all(arg>-1e-8), "negative distances occuring!!! For example {}".format(arg[arg<-1e-8])
+            arg[arg<0]=0
+            distances = np.sqrt(arg)
             indices = (np.where((distances<= d_0) & (distances>0))[0]).astype(int)
             edges[counter:counter+len(indices)]=np.array([np.ones(len(indices))*i, indices]).T
             counter += len(indices)
@@ -33,6 +35,10 @@ class fibonacci_sphere:
         L_0 = csr_matrix((np.ones(len(edges)), (edges[:,0], edges[:,1])))
         L_0 += csr_matrix((-np.ones(len(edges)), (edges[:, 0], edges[:, 0])))
         self.L_0 = L_0
+        #print(L_0.diagonal())
+        self.k = abs(np.mean(L_0.diagonal()))
+        print('average k {} for r_0 {}'.format(self.k, d_0))
+        self.N_tot = self.N
         return L_0
 
 
@@ -60,12 +66,14 @@ def _set_axes_radius(ax, origin, radius):
     ax.set_zlim3d([z - radius, z + radius])
 
 if __name__=='__main__':
-    al = fibonacci_sphere(100)
-    a=al.wiring(1.9)
-    print(a.toarray())
-    plt.imshow(a.toarray())
-    print(np.sum(a.toarray()[0]))
-    plt.show()
+    al = fibonacci_sphere(1000)
+    for r_0 in [0.2, 0.3, 0.5, 1, 1.3, 1.7]:
+        a=al.wiring(r_0)
+        print('k :', abs(np.mean(al.L_0.diagonal())))
+    #print(a.toarray())
+    #plt.imshow(a.toarray())
+    #print(np.sum(a.toarray()[0]))
+    #plt.show()
     # x, y, z = al.spherical_to_cartesian()
     # ax = plt.axes(projection='3d')
     # ax.scatter3D(x, y, z, s=2)

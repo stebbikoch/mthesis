@@ -1,8 +1,9 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 class analytics:
     def __init__(self,k, q, N):
-        self.k=k
+        self.k = k
         self.q = q
         self.N = N
 
@@ -15,7 +16,7 @@ class analytics:
         return self.q * self.k / (self.N - 1 - (1 - self.q) * self.k)
 
     @property
-    def  Delta_1(self):
+    def Delta_1(self):
         return -self.q + self.q * self.Delta_2
 
     def second_lam_three_dim(self):
@@ -36,4 +37,28 @@ class analytics:
         p = 1/self.N
         alpha = np.sin((2 * self.r_0 + 1) * np.pi * p) / np.sin(np.pi * p) - 1
         return -self.k + (1 + self.Delta_1 - self.Delta_2) * alpha - self.Delta_2
+
+    def second_lam_sphere(self, q, r_0):
+        self.q = q
+        theta_0 = 2*np.arcsin(r_0/2)
+        # average k (ideally)
+        self.k = self.N * (1-np.cos(theta_0))/2
+        #print('k: ', self.k)
+        alpha = np.pi*np.sin(theta_0)**2*1/(4*np.pi)*self.N
+        #Delta1 = 1-(q*2*np.pi*(1-np.cos(theta_0))+q*np.pi*(1-np.cos(theta_0))**2)*self.N/(4*np.pi)
+        #Delta2 = q*(1-np.cos(theta_0)**2)/4*self.N/(4*np.pi)
+        out = -1 + (1-q + (q**2-q)/(1/np.sin(theta_0/2)**2-(1-q)))*np.cos(theta_0/2)**2
+        return out#(-self.k + (1+self.Delta_1-self.Delta_2) * alpha)/self.k
+
+if __name__=='__main__':
+    x = analytics(1,1,1000)
+    q = 1
+    for r_0 in [0.2, 0.3, 0.5, 1, 1.3, 1.7]:
+        x.second_lam_sphere(q, r_0)
+        print(x.k)
+    #x = np.arange(100)/100*np.pi
+    #plt.plot(x, np.pi*np.sin(x)**2 )
+    #plt.show()
+
+
 
