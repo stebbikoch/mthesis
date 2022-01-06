@@ -347,19 +347,26 @@ class build_matrix:
         return second_largest-fact
 
     @staticmethod
-    def fast_second_largest(L_rnd, N_tot, directed=False):
+    def fast_second_largest(L_rnd, N_tot, directed=False, smallest=False):
+        shift=1.2
+        if smallest:
+            shift=0
         if directed:
             k=abs(L_rnd[0,0])
-            eigenvalues, eigenvectors = eigs(1/k * L_rnd + 1.2 * identity(N_tot), k=4, ncv=20, which='LM')
+            eigenvalues, eigenvectors = eigs(1/k * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
             eigenvalues = np.real(eigenvalues)
         else:
             D = diags(-1 / L_rnd.diagonal())
             # print(D.toarray())
-            eigenvalues, eigenvectors = eigsh(D * L_rnd + 1.2 * identity(N_tot), k=4, ncv=20, which='LM')
+            eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
         #print('eigenvalues', eigenvalues-1.2)
-        second_largest = np.partition(eigenvalues.flatten(), -2)[-2]
+        if smallest:
+            output = np.partition(eigenvalues.flatten(), -2)[0]
+        else:
+            output = np.partition(eigenvalues.flatten(), -2)[-2]
         # print(eigenvalues)
-        return second_largest - 1.2
+        return output - shift
+
 
 if __name__ == "__main__":
     x = integer_inequality(np.array([100, 100, 100]))

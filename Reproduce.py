@@ -9,17 +9,17 @@ import os
 import tqdm
 from sphere import fibonacci_sphere
 
-def worker(q, L_0=None, k=None, N_tot=None, directed=False):
+def worker(q, L_0=None, k=None, N_tot=None, directed=False, smallest=False):
     if directed:
         rows, columns, values = find(L_0)
         new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, N_tot, k, q)
         L_rnd = csr_matrix((values, (new_rows, columns)), shape=(N_tot, N_tot))
     else:
         L_rnd=build_matrix.fast_rewiring_undirected(L_0, k, q, N_tot, save_mem=False)
-    lam = build_matrix.fast_second_largest(L_rnd, N_tot, directed=directed)
+    lam = build_matrix.fast_second_largest(L_rnd, N_tot, directed=directed, smallest=smallest)
     return lam
 
-def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, directed=False):
+def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, directed=False, smallest=False):
     time1 = time.time()
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -39,7 +39,7 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, di
             z.Laplacian_0()
         dictionary[str(r_0)]['k'] = z.k
         for q in q_values:
-            lam=worker(q, L_0 = z.L_0, k = z.k, N_tot = z.N_tot, directed = directed)
+            lam=worker(q, L_0 = z.L_0, k = z.k, N_tot = z.N_tot, directed = directed, smallest=smallest)
             dictionary[str(r_0)]['qs'][str(q)] = lam
         time4 = time.time()
         print('{} seconds for previous r_0 {} in process {}: '.format(time4-time3, r_0, rank))

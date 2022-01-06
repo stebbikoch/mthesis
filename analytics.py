@@ -1,5 +1,7 @@
 import numpy as np
+from scipy.special import legendre as lg
 from matplotlib import pyplot as plt
+from legendrepolynomials import l_approx
 
 class analytics:
     def __init__(self,k, q, N):
@@ -50,11 +52,26 @@ class analytics:
         out = -1 + (1-q + (q**2-q)/(1/np.sin(theta_0/2)**2-(1-q)))*np.cos(theta_0/2)**2
         return out#(-self.k + (1+self.Delta_1-self.Delta_2) * alpha)/self.k
 
+    def smallest_lam_sphere(self, q, r_0):
+        self.q = q
+        theta_0 = 2*np.arcsin(r_0/2)
+        x = np.cos(theta_0)
+        self.k = self.N * (1-np.cos(theta_0))/2
+        l = int(l_approx(x))
+        alpha = []
+        for i in range(max(2,l-2), l+2):
+            alpha.append((lg(i-1)(x)-lg(i+1)(x))/(2*l+1))
+        alpha = min(alpha)
+        #alpha = -np.cos(theta_0)
+        #print('k: {}'.format(self.k))
+        out = (-self.k + (1+self.Delta_1-self.Delta_2) * 2 * np.pi *alpha*self.N/(4*np.pi))/self.k
+        return out
+
 if __name__=='__main__':
     x = analytics(1,1,1000)
-    q = 1
+    q = 0
     for r_0 in [0.2, 0.3, 0.5, 1, 1.3, 1.7]:
-        x.second_lam_sphere(q, r_0)
+        print(x.smallest_lam_sphere(q, r_0))
         print(x.k)
     #x = np.arange(100)/100*np.pi
     #plt.plot(x, np.pi*np.sin(x)**2 )
