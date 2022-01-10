@@ -161,25 +161,28 @@ class build_matrix:
         """
         # output array
         rows_new = np.zeros(len(rows))
-        # edges to be removed
-        M = np.random.binomial(int(k), q, size=N_tot)
+        ## edges to be removed
+        #M = np.random.binomial(int(k), q, size=N_tot)
+        #print(M)
         for i in range(N_tot):
             # get indices of ones in column i
             indices = np.where(columns==i)
             row = rows[indices]
+            # draw M now for correct k (in sphere case, not every node has same k)
+            M = np.random.binomial(len(row)-1, q)
             # draw edges to be deleted and delete
-            delete_indices = np.random.choice(len(row), size=M[i]+1, replace=False)
+            delete_indices = np.random.choice(len(row), size=M+1, replace=False)
             # delete diagonal index
             delete_indices = delete_indices[delete_indices!=np.where(row==i)[0]]
             #print(delete_indices)
             # remaining row with diagonal!
-            row_remain = np.delete(row, delete_indices[:M[i]])
+            row_remain = np.delete(row, delete_indices[:M])
             # rewire edges to new heads
             new_indices = np.arange(N_tot)
             np.random.shuffle(new_indices)
             for item in row_remain:
                 new_indices = new_indices[new_indices != item]
-            row[delete_indices[:M[i]]] = new_indices[:M[i]]
+            row[delete_indices[:M]] = new_indices[:M]
             rows_new[indices] = row
         return rows_new
 
