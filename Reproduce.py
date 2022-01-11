@@ -86,6 +86,6 @@ if __name__ == '__main__':
     #q_values = [0.7]
     #q_values = [1, 0.1, 0.01]#, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
     q_values = [0.9]#[1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-    r_0_values = [25]#[0.2, 1, 1.3]#[10, 25, 50]#, 50, 100, 200, 400, 800]
-    main(q_values, r_0_values, 'reproduce/sphere_testing', np.array([100, 100, 1]),filename='2d_100_100_1',
+    r_0_values = [8]#[0.2, 1, 1.3]#[10, 25, 50]#, 50, 100, 200, 400, 800]
+    main(q_values, r_0_values, 'reproduce/sphere_testing', np.array([20, 20, 20]),filename='3d_40_40_40',
          sphere=False, directed=False)

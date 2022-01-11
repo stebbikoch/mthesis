@@ -47,7 +47,7 @@ class integer_inequality:
                         indices.append([i,j,k])
         return degree, indices
 
-    def all_numbers(self, d_max, d_given=None):
+    def all_numbers(self, d_max, d_given=None, eucl=False):
         self.numbers = [0]
         self.indices = []
         self.d_0 = []
@@ -55,7 +55,7 @@ class integer_inequality:
         if d_given:
             iterator = d_given
         for d in iterator:
-            degree, indices =self.d_list(d)
+            degree, indices =self.d_list(d, eucl=eucl)
             if not degree == self.numbers[-1]:
                 self.numbers.append(degree)
                 self.indices.append(indices)
@@ -399,6 +399,6 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([100, 100, 100]))
-    x.all_numbers(49, d_given=[3, 5, 15, 25, 35, 45])
-    x.save_to_json('3d_100_100_100')
+    x = integer_inequality(np.array([20, 20, 20]))
+    x.all_numbers(9, d_given=[2,3,4,6,8,9], eucl=True)
+    x.save_to_json('3d_20_20_20_eucl')
