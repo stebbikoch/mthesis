@@ -213,6 +213,33 @@ class build_matrix:
         # adjust degree
         self.L_rnd += coo_matrix((-np.ones(2 * len(ps)), (np.append(ps, qs), np.append(ps, qs))), shape=(self.N_tot, self.N_tot))
 
+    def special_rewiring_1d(self, m, directed=False):
+        """
+        Delete a number of next neighbor edges randomly and redistribute them as diagonal shortcut edges.
+        :param m: number of next neighbor edges to be deleted
+        :param directed:
+        :return:
+        """
+        assert m<self.N_tot/2, 'serious problem here!!!'
+        # All together, there are N_tot edges to pick from
+        ps_del = np.random.choice(self.N_tot, size=m, replace=False)
+        qs_del = (ps_del+1)%self.N_tot
+        # adjust degrees, delete ones
+        self.L_rnd[np.append(ps_del, qs_del), np.append(qs_del, ps_del)] += -np.ones(2 * len(ps_del))
+        self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
+                            shape=(self.N_tot, self.N_tot))
+        # redistribute
+        ps_add = np.random.choice(self.N_tot, size=m, replace=False)
+        qs_add = (ps_add+self.N_tot/2)%self.N_tot
+        # new matrix to add to old
+        self.L_rnd += coo_matrix((np.ones(2 * len(ps_add)), (np.append(ps_add, qs_add), np.append(qs_add, ps_add))),
+                            shape=(self.N_tot, self.N_tot))
+        # adjust degree
+        self.L_rnd += coo_matrix((-np.ones(2 * len(ps_add)), (np.append(ps_add, qs_add), np.append(ps_add, qs_add))),
+                            shape=(self.N_tot, self.N_tot))
+
+
+
     @staticmethod
     def fast_rewiring_undirected(L_0, k, q, N_tot, save_mem=False):
         # pick number of rewiring edges

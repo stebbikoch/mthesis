@@ -59,7 +59,7 @@ class analytics:
         self.k = self.N * (1-np.cos(theta_0))/2
         l = int(l_approx(x))
         alpha = []
-        for i in range(max(2,l-2), l+2):
+        for i in range(max(2,l-4), l+4):
             alpha.append((lg(i-1)(x)-lg(i+1)(x))/(2*l+1))
         alpha = min(alpha)
         #alpha = -np.cos(theta_0)
