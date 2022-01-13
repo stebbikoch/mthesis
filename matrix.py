@@ -220,17 +220,18 @@ class build_matrix:
         :param directed:
         :return:
         """
-        assert m<self.N_tot/2, 'serious problem here!!!'
+        assert m<=self.N_tot, 'serious problem here!!!'
         # All together, there are N_tot edges to pick from
         ps_del = np.random.choice(self.N_tot, size=m, replace=False)
         qs_del = (ps_del+1)%self.N_tot
+        self.L_rnd=self.L_0.copy()
         # adjust degrees, delete ones
         self.L_rnd[np.append(ps_del, qs_del), np.append(qs_del, ps_del)] += -np.ones(2 * len(ps_del))
         self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
                             shape=(self.N_tot, self.N_tot))
         # redistribute
-        ps_add = np.random.choice(self.N_tot, size=m, replace=False)
-        qs_add = (ps_add+self.N_tot/2)%self.N_tot
+        ps_add = np.random.choice(int(self.N_tot), size=m, replace=False)
+        qs_add = (ps_add+self.N_tot/2-1)%self.N_tot
         # new matrix to add to old
         self.L_rnd += coo_matrix((np.ones(2 * len(ps_add)), (np.append(ps_add, qs_add), np.append(qs_add, ps_add))),
                             shape=(self.N_tot, self.N_tot))

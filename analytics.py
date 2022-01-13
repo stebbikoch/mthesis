@@ -59,13 +59,23 @@ class analytics:
         self.k = self.N * (1-np.cos(theta_0))/2
         l = int(l_approx(x))
         alpha = []
-        for i in range(max(2,l-4), l+4):
+        for i in range(max(2,l-2), l+2):
             alpha.append((lg(i-1)(x)-lg(i+1)(x))/(2*l+1))
         alpha = min(alpha)
         #alpha = -np.cos(theta_0)
         #print('k: {}'.format(self.k))
         out = (-self.k + (1+self.Delta_1-self.Delta_2) * 2 * np.pi *alpha*self.N/(4*np.pi))/self.k
         return out
+
+    def special_rewiring_lam(self, r_0, m):
+        k = 2*r_0
+        lam = []
+        for l in range(-499, 500):
+            if not l==0:
+                lam.append(-k -1 + np.sin((k+1) *l* np.pi/self.N) / np.sin(np.pi * l/self.N) + 2*(np.cos(2*np.pi*l*(self.N/2-1)/self.N)
+                  - np.cos(2*np.pi*l/self.N))*m/self.N)
+        output = max(lam)
+        return output/k
 
 if __name__=='__main__':
     x = analytics(1,1,1000)
