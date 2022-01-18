@@ -10,7 +10,7 @@ import tqdm
 from sphere import fibonacci_sphere
 from matplotlib import pyplot as plt
 
-def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, directed=False):
+def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, gaussian=False):
     time1 = time.time()
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -34,7 +34,10 @@ def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, di
             #print('regular')
             #plt.imshow(z.L_0.toarray(), vmin=0)
             #plt.show()
-            z.special_rewiring_1d(m)
+            if not gaussian:
+                z.special_rewiring_1d(m)
+            else:
+                z.gaussian_rewiring_1d(m)
             #print(z.L_rnd.diagonal())
             #print(z.L_rnd.toarray())
             #print('random')
@@ -84,7 +87,9 @@ def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, di
 if __name__ == '__main__':
     n=int(10)
     ara = range(1,n)
-    m_values = [0,2,5,10,15,20,25,30,40,50]+[int(item/n*1000) for item in ara]
-    r_0_values = [10, 25, 50, 100, 200, 400]
-    main(m_values, r_0_values, 'reproduce/ring_debug_special', np.array([1000, 1, 1]),filename='1d_ring_1000',
-         sphere=False, directed=False)
+    exponent = np.arange(1,16)
+    q_values = 10 ** (-exponent / 3)
+    m_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 0.2, 0.4]#[0,2,5,10,15,20,25,30,40,50]+[int(item/n*1000) for item in ara]
+    r_0_values = [10, 25, 50, 100]
+    main(q_values, r_0_values, 'reproduce/ring_debug_gaussian', np.array([1000, 1, 1]),filename='1d_ring_1000',
+         sphere=False, gaussian=True)
