@@ -9,21 +9,19 @@ from analytics import analytics
  #         's8583916-stefans_ws/mthesis/results/1000ring_sl_undirected_100xshort.json')
 #f = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
 #          's8583916-stefans_ws/mthesis/results/test_sphere_second_largest1000.jsonshort.json')
-# f = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-#           's8583916-stefans_ws/mthesis/results/sphere_new_r0_1000_directed.jsonshort.json')
-# f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-#           's8583916-stefans_ws/mthesis/results/sphere_new_r0_1000_undirected.jsonshort.json')
-f=open('reproduce/random_sphere_testingshort.json')
-f2=open('reproduce/random_sphere_testingshort.json')
+f = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+          's8583916-stefans_ws/mthesis/results/sphere_new_r0_1000_undirected.jsonshort.json')
+#f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+ #         's8583916-stefans_ws/mthesis/results/sphere_new_r0_1000_undirected.jsonshort.json')
 #f2 = open('results/test_sphere_smallest5000.jsonshort.json')
 #f2 = open('./reproduce/reproduce_1000_directed_with_averaging_test_big_q.json', )
 #f3 = open('./reproduce/reproduce_1000_undirected_with_averaging_test_big_q.json', )
 # returns JSON object as
 # a dictionary
-instance = analytics(1,1,5000)
+#instance = analytics(1,1,5000)
 instance1 = analytics(1,1,1000)
 data = json.load(f)
-data2 = json.load(f2)
+#data2 = json.load(f2)
 #data3=json.load(f3)
 fig = plt.figure()
 exponent = np.arange(16)
@@ -34,8 +32,6 @@ exponent = np.arange(201)
 q_values = 10**(-exponent/40)
 #q_values = [0]
 r_values = [0.283, 0.447, 0.632, 0.894, 1.265, 1.789]#[0.2, 0.3, 0.5, 1, 1.3, 1.7]#[20, 50, 100, 200, 400, 800]
-q_values_1 = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-r_values = [0.2, 0.4, 0.6, 0.8, 1, 1.3]#[10, 25, 50]#, 50, 100, 200, 400, 800]
 c=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
 #index=0
 #k = 50
@@ -44,39 +40,38 @@ c=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
 #print([data2[str(0.2)]['qs'][str(q)] for q in q_values_1])
 k_list=[]
 for r_0 in r_values:
-    k=data2[str(r_0)]['k']
-    line0, = plt.plot(q_values, [instance1.second_lam_sphere(q=q, r_0=r_0) for q in q_values],
-                      label=r'$r_0={}~~(\^k={:.2f})$'.format(r_0, k), zorder=2)
+    k=data[str(r_0)]['k']
+    line0, = plt.plot(q_values, [instance1.smallest_lam_sphere(q=q, r_0=r_0) for q in q_values],
+                      label=r'$r_0={}~~(\^k={:.2f})$'.format(r_0, k), zorder=1)
     #line1, =plt.plot(q_values, [instance.smallest_lam_sphere(q=q, r_0=r_0) for q in q_values], label=r'r_0='+str(r_0), color=line0.get_color())#, color=c[index])
     #line2 =plt.scatter(q_values_1, [data2[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1],color=line0.get_color(), zorder=2)#, color=c[index])
     #line3 = plt.scatter(q_values_1, [data[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1], color=line0.get_color(), zorder=2)
-    line2 = plt.errorbar(q_values_1, [data2[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1],
-                         yerr=[data2[str(r_0)]['qs'][str(q)]['second_largest'][1] for q in q_values_1], fmt='x',
+    line2 = plt.errorbar(q_values_1, [data[str(r_0)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
+                         yerr=[data[str(r_0)]['qs'][str(q)]['smallest'][1] for q in q_values_1], fmt='x',
                          color=line0.get_color(),
                          markerfacecolor='none', capsize=5)
-    line3 = plt.errorbar(q_values_1, [data[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1],
-                         yerr=[data[str(r_0)]['qs'][str(q)]['second_largest'][1] for q in q_values_1], fmt='o',
-                         color=line0.get_color(),
-                      markerfacecolor='none', capsize=5)
-    yd = 2 * np.sqrt(1 / k - 1 / 1000) - 1
-    yu = 2*np.sqrt(1 / k - 1 / 1000) - 1
+    #line3 = plt.errorbar(q_values_1, [data[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1],
+     ##                    yerr=[data[str(r_0)]['qs'][str(q)]['second_largest'][1] for q in q_values_1], fmt='o',
+       #                  color=line0.get_color(),
+        #              markerfacecolor='none', capsize=5)
+    yd = -2 * np.sqrt(1 / k - 1 / 1000) - 1
+    yu = -np.sqrt(1 / k - 1 / 10000) - 1
     line4=plt.hlines(yd, 0.5, 1.5, linewidth=0.4, color=line0.get_color(), linestyles='--')
-    line5=plt.hlines(yu, 0.5, 1.5, linewidth=0.4, color=line0.get_color(), linestyles='-.')
+    #line5=plt.hlines(yu, 0.5, 1.5, linewidth=0.4, color=line0.get_color(), linestyles='-.')
 plt.yscale('symlog', linthreshy=0.0001)
+plt.yticks([-1, -1.05, -1.1, -1.15],[-1.0, -1.05, -1.1, -1.15])
 plt.xscale('log')
 #plt.xlim(0.4,1.1)
 #plt.ylim(-1, -0.5)
 plt.xlabel(r'Small-world parameter $q$')
 plt.ylabel(r'Value of normalized second largest eigenvalue')
-legend1 = plt.legend([line0, line2, line3, line4, line5], [r"Analytical prediction", r"Numerical results undirected",
-                                                           r"Numerical results directed", r"Wigner semi-circle directed"
-                                                           , "Wigner semi-circle undirected"], loc=3)
-plt.legend(loc=7)
+legend1 = plt.legend([line0, line2, line4], [r"Analytical prediction", r"Numerical results undirected"
+                                                           , "Wigner semi-circle undirected"], loc=2)
+plt.legend(loc=6)
 plt.gca().add_artist(legend1)
-plt.grid(zorder=1)
-plt.legend()
+plt.grid()
 plt.tight_layout()
 #axs[1].set_yscale('symlog')
 #axs[1].set_xscale('log')
-#plt.savefig('figures/sphere_largest_1000.svg', format='svg', dpi=1000)
+#plt.savefig('figures/sphere_smallest_10000.svg', format='svg', dpi=1000)
 plt.show()

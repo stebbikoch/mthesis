@@ -20,7 +20,8 @@ def worker(q, L_0=None, k=None, N_tot=None, directed=False):
     lam2 = build_matrix.fast_second_largest(L_rnd, N_tot, directed=directed, smallest=True)
     return lam, lam2
 
-def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, directed=False):
+def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, randomsphere=False, eqsphere=False,
+         directed=False):
     time1 = time.time()
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -31,7 +32,7 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, di
     for r_0 in r_0_values:
         time3=time.time()
         if sphere:
-            z = fibonacci_sphere(np.prod(dimensions))
+            z = fibonacci_sphere(np.prod(dimensions), random=randomsphere, eq_partition=eqsphere)
             z.wiring(r_0)
         else:
             z = build_matrix(filename, dimensions, r_0)
@@ -85,7 +86,7 @@ if __name__ == '__main__':
     q_values = 10 ** (-exponent / 3)
     #q_values = [0.7]
     #q_values = [1, 0.1, 0.01]#, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
-    q_values = [0.9]#[1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-    r_0_values = [8]#[0.2, 1, 1.3]#[10, 25, 50]#, 50, 100, 200, 400, 800]
-    main(q_values, r_0_values, 'reproduce/sphere_testing', np.array([20, 20, 20]),filename='3d_40_40_40',
-         sphere=False, directed=False)
+    q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
+    r_0_values = [0.2, 0.4, 0.6, 0.8, 1, 1.3]#[10, 25, 50]#, 50, 100, 200, 400, 800]
+    main(q_values, r_0_values, 'reproduce/random_sphere_testing', np.array([1000, 1, 1]),filename=None,
+         sphere=True, randomsphere=True, eqsphere=False, directed=False)

@@ -8,6 +8,7 @@ from scipy.sparse import *
 from numba import njit, jit, prange
 from multiprocessing import Pool, RawArray, Array, Process
 import time
+from histogram_plots import gaussian
 
 class integer_inequality:
     def __init__(self, N):
@@ -220,23 +221,68 @@ class build_matrix:
         :param directed:
         :return:
         """
-        assert m<self.N_tot/2, 'serious problem here!!!'
+        assert m<=self.N_tot, 'serious problem here!!!'
         # All together, there are N_tot edges to pick from
         ps_del = np.random.choice(self.N_tot, size=m, replace=False)
         qs_del = (ps_del+1)%self.N_tot
+        self.L_rnd=self.L_0.copy()
         # adjust degrees, delete ones
         self.L_rnd[np.append(ps_del, qs_del), np.append(qs_del, ps_del)] += -np.ones(2 * len(ps_del))
         self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
                             shape=(self.N_tot, self.N_tot))
         # redistribute
-        ps_add = np.random.choice(self.N_tot, size=m, replace=False)
-        qs_add = (ps_add+self.N_tot/2)%self.N_tot
+        ps_add = np.random.choice(int(self.N_tot), size=m, replace=False)
+        qs_add = (ps_add+self.N_tot/2-1)%self.N_tot
         # new matrix to add to old
         self.L_rnd += coo_matrix((np.ones(2 * len(ps_add)), (np.append(ps_add, qs_add), np.append(qs_add, ps_add))),
                             shape=(self.N_tot, self.N_tot))
         # adjust degree
         self.L_rnd += coo_matrix((-np.ones(2 * len(ps_add)), (np.append(ps_add, qs_add), np.append(ps_add, qs_add))),
                             shape=(self.N_tot, self.N_tot))
+
+    def gaussian_rewiring_1d(self, q, mu=300, sigma=10):
+        if q==0:
+            self.L_rnd=self.L_0.copy()
+            return
+        # pick number of rewiring edges
+        edges = int(self.N_tot * self.k / 2)
+        M = np.random.binomial(edges, q)
+        # delete edges
+        del_edges_indices = np.random.choice(edges, size=M, replace=False)
+        # find ones in upper triangle of matrix
+        self.L_rnd = self.L_0.copy()
+        ps, qs, values = find(triu(self.L_rnd, k=1))
+        # print('edges, ps', edges, len(ps))
+        ps_del, qs_del = ps[del_edges_indices], qs[del_edges_indices]
+        # adjust degrees, delete ones
+        self.L_rnd[np.append(ps_del, qs_del), np.append(qs_del, ps_del)] += -np.ones(2 * len(ps_del))
+        self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
+                            shape=(self.N_tot, self.N_tot))
+        # now redistribute edges gaussian wise
+        lengthes = np.round(np.random.normal(loc=300, scale=30, size=2*M)).astype(int)
+        lengthes = lengthes[lengthes<500]
+        assert len(lengthes)>=M, 'Length of lengthes variable is too short ({})!!'.format(len(lengthes))
+        lengthes = lengthes[:M]
+        histo = np.histogram(lengthes, range=(1,500), bins=500)[0]
+        assert np.max(histo)<=self.N_tot, 'Redistribution of edges has problems, maximum larger than N_tot!!!'
+        #print(histo)
+        indices=np.where(histo!=0)[0]
+        for i in range(len(indices)):
+            length = indices[i]+1
+            m = histo[indices[i]]
+            #print('Length and number: {}, {}'.format(length, m))
+            ps_add = np.random.choice(self.N_tot, size=m, replace=False)
+            qs_add = (ps_add + length) % self.N_tot
+            # new matrix to add to old
+            self.L_rnd += coo_matrix(
+                (np.ones(2*len(ps_add)), (np.append(ps_add, qs_add), np.append(qs_add, ps_add))),
+                shape=(self.N_tot, self.N_tot))
+            # adjust degree
+            self.L_rnd += coo_matrix(
+                (-np.ones(2*len(ps_add)), (np.append(ps_add, qs_add), np.append(ps_add, qs_add))),
+                shape=(self.N_tot, self.N_tot))
+        #plt.imshow(self.L_rnd.toarray(), vmin=-1, vmax=2)
+        #plt.show()
 
 
 
@@ -399,6 +445,6 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([100, 100, 1]))
-    x.all_numbers(49, d_given=[3, 10, 15, 25, 35, 45], eucl=True)
-    x.save_to_json('2d_100_100_1_eucl')
+    x = integer_inequality(np.array([20, 20, 20]))
+    x.all_numbers(9, d_given=[2,3,5,6,8,9], eucl=False)
+    x.save_to_json('3d_20_20_20')
