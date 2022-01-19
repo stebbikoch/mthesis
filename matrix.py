@@ -399,6 +399,6 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([20, 20, 20]))
-    x.all_numbers(9, d_given=[2,3,4,6,8,9], eucl=True)
-    x.save_to_json('3d_20_20_20_eucl')
+    x = integer_inequality(np.array([100, 100, 1]))
+    x.all_numbers(49, d_given=[3, 10, 15, 25, 35, 45], eucl=True)
+    x.save_to_json('2d_100_100_1_eucl')
