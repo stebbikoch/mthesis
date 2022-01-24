@@ -259,7 +259,7 @@ class build_matrix:
         self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
                             shape=(self.N_tot, self.N_tot))
         # now redistribute edges gaussian wise
-        lengthes = np.round(np.random.normal(loc=300, scale=30, size=2*M)).astype(int)
+        lengthes = np.round(np.random.normal(loc=mu, scale=sigma, size=2*M)).astype(int)
         lengthes = lengthes[lengthes<500]
         assert len(lengthes)>=M, 'Length of lengthes variable is too short ({})!!'.format(len(lengthes))
         lengthes = lengthes[:M]
@@ -445,6 +445,6 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([20, 20, 20]))
-    x.all_numbers(9, d_given=[2,3,5,6,8,9], eucl=False)
-    x.save_to_json('3d_20_20_20')
+    x = integer_inequality(np.array([100, 100, 1]))
+    x.all_numbers(49, d_given=[3,5,10,15, 25, 35, 45], eucl=True)
+    x.save_to_json('2d_100_100_eucl')

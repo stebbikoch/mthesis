@@ -20,7 +20,7 @@ def n(k, N_tot, q):
         while repeat:
             index = int(round(np.random.normal(loc=300, scale=10)))
             if index <= N_tot/2:
-                d_out[index]+=1
+                d_out[index-1]+=1
                 repeat=False
     return d_out
 
@@ -43,11 +43,11 @@ if __name__=="__main__":
     print(len(data))
     plt.bar(np.arange(1,501),data, width=1, alpha=0.7, label='one instance after rewiring')
     print(len)
-    x = np.arange(1,1000)/1000*501
+    x = np.arange(2,1002)/1000*500
     plt.plot(x, n_ave(100, 1000, 0.2, x), color='orange', linestyle='--', label=r"approximate averaged probability density"
                             + "\n" + "after rewiring")
-    y = np.append(1000*np.ones(int(100/2)), np.zeros(int(501-100/2)))
-    plt.plot(np.arange(501),y, color='purple', linestyle='--', label='edge histogram before rewiring')
+    y = np.append(1000*np.ones(int(100/2)), np.zeros(int(500-100/2)))
+    plt.plot(np.arange(1,501),y, color='purple', linestyle='--', label='edge histogram before rewiring')
     plt.xlabel('edge-length')
     plt.ylabel('# of edges')
     plt.legend()
