@@ -43,8 +43,8 @@ def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, ga
             #print('random')
             #plt.imshow(z.L_rnd.toarray(), vmin=0)
             #plt.show()
-            lam = build_matrix.fast_second_largest(z.L_rnd, z.N_tot, directed=False, smallest=False)
-            lam2 = build_matrix.fast_second_largest(z.L_rnd, z.N_tot, directed=False, smallest=True)
+            lam = build_matrix.arnoldi_eigenvalues(z.L_rnd, z.N_tot, directed=False, smallest=False)
+            lam2 = build_matrix.arnoldi_eigenvalues(z.L_rnd, z.N_tot, directed=False, smallest=True)
             dictionary[str(r_0)]['ms'][str(m)]['second_largest'] = lam
             dictionary[str(r_0)]['ms'][str(m)]['smallest'] = lam2
         time4 = time.time()

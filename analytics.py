@@ -30,18 +30,25 @@ class analytics:
         d_vector = np.array(self.all_indices_list[index])
         return len(d_vector)
 
-    def exact_alpha(self, d_function, p, r, smallest=False, multi_p=False):
+    def exact_alpha(self, d_function, p, r, smallest=False, multi_p=False, threed=False):
         self.D_0_load(d_function)
         index=np.where(self.d_0s==r)[0][0]
         d_vector = np.array(self.all_indices_list[index])
         self.k = len(d_vector[:,0])
         if smallest:
             alpha = []
-            print(int(5.1356 * 100 / (2 * np.pi * r)+1.5))
-            for i in range(1, int(5.1356 * 100 / (2 * np.pi * r)+1.5)):
-                for j in range(1, int(5.1356 * 100 // 2 * np.pi * r+1.5)):
-                    p = np.array([i / 100, j / 100, 0])
-                    alpha.append(np.real(np.sum(np.exp(1j*np.pi*2*np.dot(p,d_vector.T)))))
+            limit=int(5.1356 * 100 / (2 * np.pi * r)+1.5)
+            if threed:
+                limit = int(5.763/(2*np.pi*r)*20+1.5)
+            for i in range(limit):
+                for j in range(limit):
+                    if threed:
+                        for k in range(limit):
+                            p = np.array([i / 20, j / 20, k/20])
+                            alpha.append(np.real(np.sum(np.exp(1j * np.pi * 2 * np.dot(p, d_vector.T)))))
+                    else:
+                        p = np.array([i / 100, j / 100, 0])
+                        alpha.append(np.real(np.sum(np.exp(1j*np.pi*2*np.dot(p,d_vector.T)))))
             #print(alpha)
             return min(alpha)
         elif multi_p:
@@ -51,6 +58,13 @@ class analytics:
             return out/len(d_vector)
         else:
             return np.sum(np.exp(1j*np.pi*2*np.dot(p,d_vector.T)))
+
+    def exact_eigens(self, q, r):
+        self.q=q
+        alpha= self.exact_alpha('2d_32_32_eucl_tightest', 1,r, smallest=True)
+        print('real k', self.k)
+        return (-self.k+(1+self.Delta_1-self.Delta_2)*alpha-self.Delta_2)/self.k
+
 
     def q0_eigenvalues(self,a=1, r=None):
         self.k=(2*r+1)**3-1
@@ -92,6 +106,22 @@ class analytics:
         out = -self.k+(1+self.Delta_1-self.Delta_2)*alpha-self.Delta_2
         return out/self.k
 
+    def lam_three_dim_eucl(self, q=None, r=None, smallest=False, exact=False, real_k=False):
+        self.q=q
+        self.k=4/3*np.pi*r**3-1
+        if real_k:
+            self.exact_alpha('3d_20_20_20_eucl', 1/20, r)
+        p = 1/20
+        alpha = (np.sin(2*np.pi*r*p)-2*np.pi*r*p*np.cos(2*np.pi*r*p))/(2*np.pi**2*p**3)
+        if exact:
+            if smallest:
+                alpha = self.exact_alpha('3d_20_20_20_eucl', p, r, smallest=True, threed=True)
+            else:
+                alpha = self.exact_alpha('3d_20_20_20_eucl', np.array([p, 0, 0]), r)
+                alpha = np.real(alpha)
+        out = -self.k+(1+self.Delta_1-self.Delta_2)*alpha-self.Delta_2
+        return out/self.k
+
     def second_lam_three_dim(self, q=None, r=None, smallest=False):
         self.q = q
         self.k = (2*r+1)**3-1
@@ -103,14 +133,18 @@ class analytics:
         alpha = np.prod(np.sin((2*r+1)*np.pi*p)/np.sin(np.pi*p))-1
         return (-self.k + (1+self.Delta_1-self.Delta_2)*alpha -self.Delta_2)/self.k
 
-    def second_lam_two_dim(self, q=None, r=None, smallest=False):
+    def second_lam_two_dim(self, q=None, r=None, n=None, smallest=False):
         self.q = q
         self.k = (2*r+1)**2-1
+        if n:
+            self.n=n
+        else:
+            self.n=np.sqrt(self.N)
         if smallest:
-            p_l=np.round(1.5*100/ (2 * r + 1))/100
+            p_l=np.round(1.5*self.n/ (2 * r + 1))/self.n
             p = np.array([1e-9, p_l])
         else:
-            p = np.array([1e-9, 1 / np.sqrt(self.N)])
+            p = np.array([1e-9, 1 / self.n])
         alpha = np.prod(np.sin((2 * r + 1) * np.pi * p) / np.sin(np.pi * p)) - 1
         return (-self.k + (1 + self.Delta_1 - self.Delta_2) * alpha - self.Delta_2)/self.k
 
@@ -137,7 +171,7 @@ class analytics:
         out = -1 + (1-q + (q**2-q)/(1/np.sin(theta_0/2)**2-(1-q)))*np.cos(theta_0/2)**2
         return out#(-self.k + (1+self.Delta_1-self.Delta_2) * alpha)/self.k
 
-    def smallest_lam_sphere(self, q, r_0):
+    def smallest_lam_sphere(self, q, r_0, limes=False):
         self.q = q
         theta_0 = 2*np.arcsin(r_0/2)
         x = np.cos(theta_0)
@@ -147,6 +181,8 @@ class analytics:
         for i in range(max(2,l-2), l+2):
             alpha.append((lg(i-1)(x)-lg(i+1)(x))/(2*l+1))
         alpha = min(alpha)
+        if limes:
+            alpha = 1/8*(np.cos(theta_0)-1)
         #alpha = -np.cos(theta_0)
         #print('k: {}'.format(self.k))
         out = (-self.k + (1+self.Delta_1-self.Delta_2) * 2 * np.pi *alpha*self.N/(4*np.pi))/self.k

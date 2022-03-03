@@ -8,7 +8,7 @@ from scipy.sparse import *
 from numba import njit, jit, prange
 from multiprocessing import Pool, RawArray, Array, Process
 import time
-from histogram_plots import gaussian
+#from histogram_plots import gaussian
 
 class integer_inequality:
     def __init__(self, N):
@@ -22,7 +22,10 @@ class integer_inequality:
     def eucl_distance(self, i, j, k):
         return (np.sqrt(i**2+j**2+k**2))
 
-    def d_list(self, d, eucl=False):
+    def eucl_tightest(self, i, j, k):
+        return np.sqrt(i**2 + j**2 + i*j)
+
+    def d_list(self, d, eucl=False, tightest=False):
         """
         This function is supposed to find all (positive) indices, that satisfy the inequality d(i,j)<=d and returns them
         for a value of d. Also it counts the number of those tuples. For simplicity only allow positive numbers of nodes
@@ -32,14 +35,16 @@ class integer_inequality:
         """
         if eucl is True:
             func = self.eucl_distance
+        elif tightest is True:
+            func = self.eucl_tightest
         else:
             func = self.max_distance
         degree = 0
         indices = []
         # lower limit
-        lo_li = -np.minimum(d, self.N/2)
+        lo_li = -self.N/2
         # upper limit
-        up_li = np.minimum(d+1, self.N/2+1)
+        up_li = self.N/2+1
         for i in range(int(lo_li[0]), int(up_li[0])):
             for j in range(int(lo_li[1]), int(up_li[1])):
                 for k in range(int(lo_li[2]), int(up_li[2])):
@@ -48,7 +53,7 @@ class integer_inequality:
                         indices.append([i,j,k])
         return degree, indices
 
-    def all_numbers(self, d_max, d_given=None, eucl=False):
+    def all_numbers(self, d_max, d_given=None, eucl=False, tightest=False):
         self.numbers = [0]
         self.indices = []
         self.d_0 = []
@@ -56,7 +61,7 @@ class integer_inequality:
         if d_given:
             iterator = d_given
         for d in iterator:
-            degree, indices =self.d_list(d, eucl=eucl)
+            degree, indices =self.d_list(d, eucl=eucl, tightest=tightest)
             if not degree == self.numbers[-1]:
                 self.numbers.append(degree)
                 self.indices.append(indices)
@@ -423,8 +428,8 @@ class build_matrix:
         return second_largest-fact
 
     @staticmethod
-    def fast_second_largest(L_rnd, N_tot, directed=False, smallest=False):
-        shift=1.2
+    def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True):
+        shift=2
         if smallest:
             shift=0
         if directed:
@@ -432,7 +437,10 @@ class build_matrix:
             eigenvalues, eigenvectors = eigs(1/k * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
             eigenvalues = np.real(eigenvalues)
         else:
-            D = diags(-1 / L_rnd.diagonal())
+            if normalized:
+                D = diags(-1 / L_rnd.diagonal())
+            else:
+                D = -1/np.mean(L_rnd.diagonal())
             # print(D.toarray())
             eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
         #print('eigenvalues', eigenvalues-1.2)
@@ -445,6 +453,6 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([100, 100, 1]))
-    x.all_numbers(49, d_given=[3,5,10,15, 25, 35, 45], eucl=True)
-    x.save_to_json('2d_100_100_eucl')
+    x = integer_inequality(np.array([32, 32, 1]))
+    x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
+    x.save_to_json('2d_32_32_eucl_tightest')
