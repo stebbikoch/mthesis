@@ -5,15 +5,15 @@ import statistics as st
 from analytics import analytics
 
 #f1 = open('./reproduce/reproduce_1001_undirected_analytics.txt', )
-#f2 = open('../results/wattsstrogatz_undir_bothshort.json')
-f2 = open('../results/wattsstrogatz_undir_both_ws_grabows_mistakeshort.json')
-#f3 = open('../results/wattsstrogatz_undir_both_ws_originalshort.json')
-f3 = open('../results/wattsstrogatz_undir_both_ws_original_grabows_mistakeshort.json')
+f2 = open('../results/wattsstrogatz_undir_bothshort.json')
+#f2 = open('../results/wattsstrogatz_undir_both_ws_grabows_mistakeshort.json')
+f3 = open('../results/wattsstrogatz_undir_both_ws_originalshort.json')
+#f3 = open('../results/wattsstrogatz_undir_both_ws_original_grabows_mistakeshort.json')
 #f2 = open('./reproduce/reproduce_1000_directed_with_averaging_test_big_q.json', )
 #f3 = open('./reproduce/reproduce_1000_undirected_with_averaging_test_big_q.json', )
 # returns JSON object as
 # a dictionary
-only_upper=True
+only_upper=False
 data2 = json.load(f2)
 data3=json.load(f3)
 fig = plt.figure()
@@ -44,7 +44,7 @@ for k in r_values:
     line11 = plt.errorbar(4, data3[str(k)]['qs'][str(1)]['smallest_norm'][0],
                          yerr=data3[str(k)]['qs'][str(1)]['smallest_norm'][1], fmt='o', color=line1.get_color(),
                          markerfacecolor='none', capsize=10)
-    line4 = plt.hlines(2*np.sqrt(1/(2*k)-1/1000)-1, 1, 4.2, linestyle='--',color=line1.get_color(), alpha=0.4)
+    line4 = plt.hlines(2*np.sqrt(1/(2*k)-1/1000)-1, 2, 4.2, linestyle='--',color=line1.get_color(), alpha=0.4)
     line7 = plt.hlines(-2 * np.sqrt(1 / (2 * k) - 1 / 1000) - 1, 2, 4.2,  linestyle='--', color=line1.get_color(), alpha=0.4)
     #line7 = plt.hlines(-data2[str(k)]['qs'][str(1)]['k_max']/(2*k), 0.8, 2.2, linestyle='-.', color=line1.get_color(), alpha=0.4)
     #line7 = plt.hlines(-data2[str(k)]['qs'][str(1)]['k_min'] / (2 * k), 0.8, 2.2, linestyle='-.', color=line1.get_color(),
@@ -83,7 +83,7 @@ if only_upper:
 #else:
     #plt.ylim(ymax=-0.1)
     #plt.yticks([-i/10 for i in range(2, 20)], [-i/10 for i in range(2, 20)])
-plt.xticks([1,2,3,4],['generalized \n scaled','original \n scaled', 'generalized \n normalized', 'original \n normalized'])
+plt.xticks([1,2,3,4],['simple \n scaled','original \n scaled', 'simple \n normalized', 'original \n normalized'])
 #plt.xticks([1.5, 2.5],['scaled laplacian', 'normalized laplacian'])
 plt.xlim(0.5, 4.5)
 #plt.xscale('log')
@@ -100,6 +100,6 @@ plt.tight_layout()
 #axs[1].set_xscale('log')
 if only_upper:
     plt.savefig('../figures/investigation_upper_grabows_mistake.svg', format='svg', dpi=1000)
-#else:
- #   plt.savefig('../figures/investigation_all.svg', format='svg', dpi=1000)
+else:
+    plt.savefig('../figures/investigation_all.svg', format='svg', dpi=1000)
 plt.show()

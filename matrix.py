@@ -428,12 +428,17 @@ class build_matrix:
         return second_largest-fact
 
     @staticmethod
-    def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True):
+    def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True, adjacency=False):
         shift=2
         if smallest:
-            shift=0
+            if adjacency:
+                shift = -0.5
+            else:
+                shift=0
         if directed:
             k=abs(L_rnd[0,0])
+            if adjacency:
+                L_rnd = L_rnd.setdiag(0)
             eigenvalues, eigenvectors = eigs(1/k * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
             eigenvalues = np.real(eigenvalues)
         else:
@@ -441,7 +446,8 @@ class build_matrix:
                 D = diags(-1 / L_rnd.diagonal())
             else:
                 D = -1/np.mean(L_rnd.diagonal())
-            # print(D.toarray())
+            if adjacency:
+                L_rnd = L_rnd.setdiag(0)
             eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
         #print('eigenvalues', eigenvalues-1.2)
         if smallest:
