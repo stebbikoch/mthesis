@@ -89,9 +89,11 @@ class eq_partition_alg:
 
 class fibonacci_sphere:
     def __init__(self, N, random=False, eq_partition=False):
-        np.random.seed(1)
         self.N = N
         if random:
+            # get random state and set seed
+            st0 = np.random.get_state()
+            np.random.seed(1)
             self.phi = np.zeros(N)
             self.theta = np.zeros(N)
             for i in range(N):
@@ -113,7 +115,9 @@ class fibonacci_sphere:
                             again=False
                     else:
                         again=False
-            print(self.theta[-1], self.phi[-1])
+            # set back random state
+            np.random.set_state(st0)
+            #print(self.theta[-1], self.phi[-1])
 
         elif eq_partition:
             instance = eq_partition_alg(self.N)

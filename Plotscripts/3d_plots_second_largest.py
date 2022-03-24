@@ -30,7 +30,7 @@ c=['b', 'g', 'r', 'c', 'm', 'y', 'r', 'w']
 #print(data2[str(r)][str(q)])
 instance.D_0_load('3d_20_20_20')
 for r in r_values:
-    line1, =plt.plot(q_values, [instance.second_lam_three_dim(q=q, r=r) for q in q_values], label=r'$r_0=$'+str(r))#, color=c[index])
+    line1, =plt.plot(q_values, [instance.second_lam_three_dim(q=q, r=r) for q in q_values], label=r'$r_0={}~(k={})$'.format(r, (2*r+1)**3-1))#, color=c[index])
     line2, = plt.plot(q_values, [instance.second_lam_three_dim(q=q, r=r, smallest=True) for q in q_values], color=line1.get_color())
     line4 =plt.errorbar(q_values_1, [data3[str(r)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
                         yerr=[data3[str(r)]['qs'][str(q)]['smallest'][1] for q in q_values_1],  fmt='o',color=line2.get_color(), markerfacecolor='none', capsize=5)#, color=c[index])
@@ -49,12 +49,14 @@ plt.xscale('log')
 #plt.yticrs([-1, -0.9, -0.8, -0.7, -0.6],[-1.0, -0.9, -0.8, -0.7, -0.6])
 plt.xlabel(r'Small-world parameter $q$')
 plt.ylabel(r'Value of normalized second largest eigenvalue')
-legend1 = plt.legend([line2, line4, line5], [r"Analytical prediction", r'Numerical results undirected', r'Wigner semi-circle prediction undirected', r'Wigner semi-circle prediction directed'], loc=9)
+legend1 = plt.legend([line2, line4, line5], [r"Analytical prediction", r'Numerical results undirected',
+                                             r'Wigner semi-circle prediction undirected', r'Wigner semi-circle prediction directed'],
+                     loc='upper left')
 plt.legend(loc=1)
 plt.gca().add_artist(legend1)
 plt.grid()
 plt.tight_layout()
 #axs[1].set_yscale('symlog')
 #axs[1].set_xscale('log')
-#plt.savefig('figures/1000ring_Q_100x.svg', format='svg', dpi=1000)
+plt.savefig('figures/80003d_max_norm_all.svg', format='svg', dpi=1000)
 plt.show()

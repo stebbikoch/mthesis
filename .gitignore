@@ -4,6 +4,7 @@ matrices/
 reproduce/
 pictures/
 env/
+Calcscripts/
 results/
 __pycache__/
 .ipynb_checkpoints/

@@ -8,7 +8,7 @@ from scipy.sparse import *
 from numba import njit, jit, prange
 from multiprocessing import Pool, RawArray, Array, Process
 import time
-from histogram_plots import gaussian
+#from histogram_plots import gaussian
 
 class integer_inequality:
     def __init__(self, N):
@@ -17,12 +17,15 @@ class integer_inequality:
         self.N_tot = np.prod(self.N)
 
     def max_distance(self, i, j, k):
-        return max(i,j,k)
+        return max(abs(i),abs(j),abs(k))
 
     def eucl_distance(self, i, j, k):
         return (np.sqrt(i**2+j**2+k**2))
 
-    def d_list(self, d, eucl=False):
+    def eucl_tightest(self, i, j, k):
+        return np.sqrt(i**2 + j**2 + i*j)
+
+    def d_list(self, d, eucl=False, tightest=False):
         """
         This function is supposed to find all (positive) indices, that satisfy the inequality d(i,j)<=d and returns them
         for a value of d. Also it counts the number of those tuples. For simplicity only allow positive numbers of nodes
@@ -32,14 +35,16 @@ class integer_inequality:
         """
         if eucl is True:
             func = self.eucl_distance
+        elif tightest is True:
+            func = self.eucl_tightest
         else:
             func = self.max_distance
         degree = 0
         indices = []
         # lower limit
-        lo_li = -np.minimum(d, self.N/2)
+        lo_li = -self.N/2
         # upper limit
-        up_li = np.minimum(d+1, self.N/2+1)
+        up_li = self.N/2+1
         for i in range(int(lo_li[0]), int(up_li[0])):
             for j in range(int(lo_li[1]), int(up_li[1])):
                 for k in range(int(lo_li[2]), int(up_li[2])):
@@ -48,7 +53,7 @@ class integer_inequality:
                         indices.append([i,j,k])
         return degree, indices
 
-    def all_numbers(self, d_max, d_given=None, eucl=False):
+    def all_numbers(self, d_max, d_given=None, eucl=False, tightest=False):
         self.numbers = [0]
         self.indices = []
         self.d_0 = []
@@ -56,7 +61,7 @@ class integer_inequality:
         if d_given:
             iterator = d_given
         for d in iterator:
-            degree, indices =self.d_list(d, eucl=eucl)
+            degree, indices =self.d_list(d, eucl=eucl, tightest=tightest)
             if not degree == self.numbers[-1]:
                 self.numbers.append(degree)
                 self.indices.append(indices)
@@ -73,9 +78,9 @@ class build_matrix:
     def __init__(self, d_function, N, r_0):
         self.d_function = d_function # string name of d_function
         try:
-            f = open('./d_functions/'+self.d_function+'.json', )
+            f = open('../d_functions/'+self.d_function+'.json')
         except:
-            f = open('./d_functions/'+self.d_function+'.txt', )
+            f = open('d_functions/' + self.d_function + '.json')
         # returns JSON object as
         # a dictionary
         data = json.load(f)
@@ -259,7 +264,7 @@ class build_matrix:
         self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
                             shape=(self.N_tot, self.N_tot))
         # now redistribute edges gaussian wise
-        lengthes = np.round(np.random.normal(loc=300, scale=30, size=2*M)).astype(int)
+        lengthes = np.round(np.random.normal(loc=mu, scale=sigma, size=2*M)).astype(int)
         lengthes = lengthes[lengthes<500]
         assert len(lengthes)>=M, 'Length of lengthes variable is too short ({})!!'.format(len(lengthes))
         lengthes = lengthes[:M]
@@ -423,17 +428,28 @@ class build_matrix:
         return second_largest-fact
 
     @staticmethod
-    def fast_second_largest(L_rnd, N_tot, directed=False, smallest=False):
-        shift=1.2
+    def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True, adjacency=False):
+        L_rnd = L_rnd.copy()
+        shift=2
         if smallest:
-            shift=0
+            if adjacency:
+                shift = -0.5
+            else:
+                shift=0
         if directed:
             k=abs(L_rnd[0,0])
+            if adjacency:
+                L_rnd = L_rnd.setdiag(0)
             eigenvalues, eigenvectors = eigs(1/k * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
             eigenvalues = np.real(eigenvalues)
         else:
-            D = diags(-1 / L_rnd.diagonal())
-            # print(D.toarray())
+            if normalized:
+                D = diags(-1 / L_rnd.diagonal())
+            else:
+                print(np.mean(L_rnd.diagonal()))
+                D = -1/np.mean(L_rnd.diagonal())
+            if adjacency:
+                L_rnd.setdiag(0)
             eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
         #print('eigenvalues', eigenvalues-1.2)
         if smallest:
@@ -445,6 +461,7 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([20, 20, 20]))
-    x.all_numbers(9, d_given=[2,3,5,6,8,9], eucl=False)
-    x.save_to_json('3d_20_20_20')
+    x = integer_inequality(np.array([16, 16, 16]))
+    #x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
+    x.all_numbers(49, d_given=[1])
+    x.save_to_json('3d_16_16_16')
