@@ -17,7 +17,7 @@ class integer_inequality:
         self.N_tot = np.prod(self.N)
 
     def max_distance(self, i, j, k):
-        return max(i,j,k)
+        return max(abs(i),abs(j),abs(k))
 
     def eucl_distance(self, i, j, k):
         return (np.sqrt(i**2+j**2+k**2))
@@ -77,10 +77,7 @@ class integer_inequality:
 class build_matrix:
     def __init__(self, d_function, N, r_0):
         self.d_function = d_function # string name of d_function
-        try:
-            f = open('./d_functions/'+self.d_function+'.json', )
-        except:
-            f = open('./d_functions/'+self.d_function+'.txt', )
+        f = open('../d_functions/'+self.d_function+'.json')
         # returns JSON object as
         # a dictionary
         data = json.load(f)
@@ -429,6 +426,7 @@ class build_matrix:
 
     @staticmethod
     def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True, adjacency=False):
+        L_rnd = L_rnd.copy()
         shift=2
         if smallest:
             if adjacency:
@@ -445,9 +443,10 @@ class build_matrix:
             if normalized:
                 D = diags(-1 / L_rnd.diagonal())
             else:
+                print(np.mean(L_rnd.diagonal()))
                 D = -1/np.mean(L_rnd.diagonal())
             if adjacency:
-                L_rnd = L_rnd.setdiag(0)
+                L_rnd.setdiag(0)
             eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
         #print('eigenvalues', eigenvalues-1.2)
         if smallest:
@@ -459,6 +458,7 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([32, 32, 1]))
-    x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
-    x.save_to_json('2d_32_32_eucl_tightest')
+    x = integer_inequality(np.array([16, 16, 16]))
+    #x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
+    x.all_numbers(49, d_given=[1])
+    x.save_to_json('3d_16_16_16')
