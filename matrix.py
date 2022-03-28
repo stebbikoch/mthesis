@@ -461,7 +461,7 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([16, 16, 16]))
+    x = integer_inequality(np.array([4096, 1, 1]))
     #x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
-    x.all_numbers(49, d_given=[1])
-    x.save_to_json('3d_16_16_16')
+    x.all_numbers(49, d_given=[13])
+    x.save_to_json('1d_4096')
