@@ -67,7 +67,7 @@ class integer_inequality:
                 self.indices.append(indices)
                 self.d_0.append(d)
         self.numbers.pop(0)
-        plt.step(self.d_0, self.numbers, where='post')
+        #plt.step(self.d_0, self.numbers, where='post')
         #plt.show()
 
     def save_to_json(self, name):

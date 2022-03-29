@@ -12,6 +12,20 @@ class analytics:
         self.q = q
         self.N = N
 
+    def laplacian_approx(self, k, N, largest=True):
+        p = k/(N-1)
+        q = 1-p
+        def approx2(p, q, N):
+            n = N
+            output = p * n + np.sqrt(2 * p * q * n * np.log(n)) - np.sqrt(p * q * n / 8 / np.log(n) * np.log(np.log(n)))
+            return output
+        if largest:
+            return - approx2(p, q, N)/k
+        else:
+            p = q
+            q = 1 - p
+            return -(N - approx2(p,q, N))/k
+
     def D_0_load(self, d_function):
         try:
             f = open('./d_functions/' + d_function + '.json', )
