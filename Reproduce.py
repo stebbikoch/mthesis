@@ -189,17 +189,24 @@ def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere
                                           'k_max':float(),
                                           'k_min':float()} for q in q_values}} for N in N_values}
     # go through r_0 and q values
-    for r_0 in r_0_values:
+    for N in N_values:
         time3=time.time()
         if sphere:
+            dimensions = np.array([N, 1, 1])
             z = fibonacci_sphere(np.prod(dimensions), random=randomsphere, eq_partition=eqsphere)
-            z.wiring(r_0)
+            z.wiring(r_0_value)
         else:
-            z = build_matrix(filename, dimensions, r_0)
+            if dimensions[2] == 1 and dimensions[1]==1:
+                dimensions = np.array([N, 1, 1])
+            elif dimensions[2] == 1:
+                dimensions = np.array([np.sqrt(N), np.sqrt(N), 1])
+            else:
+                dimensions = np.array([np.cbrt(N), np.cbrt(N), np.cbrt(N)])
+            z = build_matrix(filename, dimensions, r_0_value)
             z.tuples=build_matrix.fast_all_indices(np.array(z.D_0), z.N)
             z.one_int_index_tuples_and_adjacency()
             z.Laplacian_0()
-        dictionary[str(r_0)]['k'] = z.k
+        dictionary[str(N)]['k'] = z.k
         for q in q_values:
             # use original watts strogatz algorithm (implemented through networkx, only for undirected case)
             if nxwatts_strogatz:
@@ -230,22 +237,22 @@ def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere
                 c = nx.average_clustering(G)
                 l = nx.average_shortest_path_length(G)
             # write results in dictionary
-                dictionary[str(r_0)]['qs'][str(q)]['clustering'] = c
-                dictionary[str(r_0)]['qs'][str(q)]['characteristic_path'] = l
-            dictionary[str(r_0)]['qs'][str(q)]['second_largest'] = lam
-            dictionary[str(r_0)]['qs'][str(q)]['smallest'] = lam2
-            dictionary[str(r_0)]['qs'][str(q)]['second_largest_adjacency'] = lam_adj
-            dictionary[str(r_0)]['qs'][str(q)]['smallest_adjacency'] = lam2_adj
-            dictionary[str(r_0)]['qs'][str(q)]['k_min'] = min_degree
-            dictionary[str(r_0)]['qs'][str(q)]['k_max'] = max_degree
+                dictionary[str(N)]['qs'][str(q)]['clustering'] = c
+                dictionary[str(N)]['qs'][str(q)]['characteristic_path'] = l
+            dictionary[str(N)]['qs'][str(q)]['second_largest'] = lam
+            dictionary[str(N)]['qs'][str(q)]['smallest'] = lam2
+            dictionary[str(N)]['qs'][str(q)]['second_largest_adjacency'] = lam_adj
+            dictionary[str(N)]['qs'][str(q)]['smallest_adjacency'] = lam2_adj
+            dictionary[str(N)]['qs'][str(q)]['k_min'] = min_degree
+            dictionary[str(N)]['qs'][str(q)]['k_max'] = max_degree
             print('q={} done'.format(q))
         time4 = time.time()
-        print('{} seconds for previous r_0 {} in process {}: '.format(time4-time3, r_0, rank))
+        print('{} seconds for previous N {} in process {}: '.format(time4-time3, N, rank))
     # gather processes
     data = comm.gather(dictionary, root=0)
     if rank==0:
         print('gathered {} processes.'.format(len(data)))
-        longdict={str(r_0):{'k':float(),
+        longdict={str(N):{'k':float(),
                             'qs':{str(q):{'clustering':[],
                                           'characteristic_path':[],
                                           'smallest':[],
@@ -253,8 +260,8 @@ def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere
                                           'smallest_adj': [],
                                           'second_largest_adj': [],
                                           'k_max':[],
-                                          'k_min':[]} for q in q_values}} for r_0 in r_0_values}
-        shortdict={str(r_0):{'k':float(),
+                                          'k_min':[]} for q in q_values}} for N in N_values}
+        shortdict={str(N):{'k':float(),
                              'qs':{str(q):{'clustering':[],
                                            'characteristic_path':[],
                                            'smallest':[],
@@ -262,52 +269,50 @@ def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere
                                            'smallest_adj': [],
                                            'second_largest_adj': [],
                                            'k_max': float(),
-                                           'k_min':float()} for q in q_values}} for r_0 in r_0_values}
-        for r_0 in r_0_values:
-            longdict[str(r_0)]['k'] = dictionary[str(r_0)]['k']
-            shortdict[str(r_0)]['k'] = dictionary[str(r_0)]['k']
+                                           'k_min':float()} for q in q_values}} for N in N_values}
+        for N in N_values:
+            longdict[str(N)]['k'] = dictionary[str(N)]['k']
+            shortdict[str(N)]['k'] = dictionary[str(N)]['k']
             for q in q_values:
                 c_list = []
                 l_list = []
                 lams=[]
                 lams2=[]
-                lams_norm=[]
-                lams2_norm=[]
                 lams_adj = []
                 lams2_adj = []
                 k_mins=[]
                 k_maxs=[]
                 for i in range(len(data)):
                     if pathclustering:
-                        c_list.append(data[i][str(r_0)]['qs'][str(q)]['clustering'])
-                        l_list.append(data[i][str(r_0)]['qs'][str(q)]['characteristic_path'])
-                    lams.append(data[i][str(r_0)]['qs'][str(q)]['second_largest'])
-                    lams2.append(data[i][str(r_0)]['qs'][str(q)]['smallest'])
-                    lams_adj.append(data[i][str(r_0)]['qs'][str(q)]['second_largest_adjacency'])
-                    lams2_adj.append(data[i][str(r_0)]['qs'][str(q)]['smallest_adjacency'])
-                    k_mins.append(data[i][str(r_0)]['qs'][str(q)]['k_min'])
-                    k_maxs.append(data[i][str(r_0)]['qs'][str(q)]['k_max'])
+                        c_list.append(data[i][str(N)]['qs'][str(q)]['clustering'])
+                        l_list.append(data[i][str(N)]['qs'][str(q)]['characteristic_path'])
+                    lams.append(data[i][str(N)]['qs'][str(q)]['second_largest'])
+                    lams2.append(data[i][str(N)]['qs'][str(q)]['smallest'])
+                    lams_adj.append(data[i][str(N)]['qs'][str(q)]['second_largest_adjacency'])
+                    lams2_adj.append(data[i][str(N)]['qs'][str(q)]['smallest_adjacency'])
+                    k_mins.append(data[i][str(N)]['qs'][str(q)]['k_min'])
+                    k_maxs.append(data[i][str(N)]['qs'][str(q)]['k_max'])
                 if pathclustering:
-                    longdict[str(r_0)]['qs'][str(q)]['clustering'] = c_list
-                    longdict[str(r_0)]['qs'][str(q)]['characteristic_path'] = l_list
-                longdict[str(r_0)]['qs'][str(q)]['second_largest'] = lams
-                longdict[str(r_0)]['qs'][str(q)]['smallest'] = lams2
-                longdict[str(r_0)]['qs'][str(q)]['second_largest_adj'] = lams_adj
-                longdict[str(r_0)]['qs'][str(q)]['smallest_adj'] = lams2_adj
-                longdict[str(r_0)]['qs'][str(q)]['k_min'] = k_mins
-                longdict[str(r_0)]['qs'][str(q)]['k_max'] = k_maxs
+                    longdict[str(N)]['qs'][str(q)]['clustering'] = c_list
+                    longdict[str(N)]['qs'][str(q)]['characteristic_path'] = l_list
+                longdict[str(N)]['qs'][str(q)]['second_largest'] = lams
+                longdict[str(N)]['qs'][str(q)]['smallest'] = lams2
+                longdict[str(N)]['qs'][str(q)]['second_largest_adj'] = lams_adj
+                longdict[str(N)]['qs'][str(q)]['smallest_adj'] = lams2_adj
+                longdict[str(N)]['qs'][str(q)]['k_min'] = k_mins
+                longdict[str(N)]['qs'][str(q)]['k_max'] = k_maxs
                 if pathclustering:
-                    shortdict[str(r_0)]['qs'][str(q)]['clustering'] = [np.mean(np.array(c_list)), np.std(np.array(c_list))]
-                    shortdict[str(r_0)]['qs'][str(q)]['characteristic_path'] = [np.mean(np.array(l_list)),
+                    shortdict[str(N)]['qs'][str(q)]['clustering'] = [np.mean(np.array(c_list)), np.std(np.array(c_list))]
+                    shortdict[str(N)]['qs'][str(q)]['characteristic_path'] = [np.mean(np.array(l_list)),
                                                                             np.std(np.array(l_list))]
-                shortdict[str(r_0)]['qs'][str(q)]['second_largest'] = [np.mean(np.array(lams)), np.std(np.array(lams))]
-                shortdict[str(r_0)]['qs'][str(q)]['smallest'] = [np.mean(np.array(lams2)), np.std(np.array(lams2))]
-                shortdict[str(r_0)]['qs'][str(q)]['second_largest_adj'] = [np.mean(np.array(lams_adj)),
+                shortdict[str(N)]['qs'][str(q)]['second_largest'] = [np.mean(np.array(lams)), np.std(np.array(lams))]
+                shortdict[str(N)]['qs'][str(q)]['smallest'] = [np.mean(np.array(lams2)), np.std(np.array(lams2))]
+                shortdict[str(N)]['qs'][str(q)]['second_largest_adj'] = [np.mean(np.array(lams_adj)),
                                                                             np.std(np.array(lams_adj))]
-                shortdict[str(r_0)]['qs'][str(q)]['smallest_adj'] = [np.mean(np.array(lams2_adj)),
+                shortdict[str(N)]['qs'][str(q)]['smallest_adj'] = [np.mean(np.array(lams2_adj)),
                                                                       np.std(np.array(lams2_adj))]
-                shortdict[str(r_0)]['qs'][str(q)]['k_min'] = np.mean(np.array(k_mins))
-                shortdict[str(r_0)]['qs'][str(q)]['k_max'] = np.mean(np.array(k_maxs))
+                shortdict[str(N)]['qs'][str(q)]['k_min'] = np.mean(np.array(k_mins))
+                shortdict[str(N)]['qs'][str(q)]['k_max'] = np.mean(np.array(k_maxs))
         time2 = time.time()
         # save dictionary in json
         print('Done. Took {} s.'.format(time2-time1))
@@ -328,9 +333,10 @@ def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere
 if __name__ == '__main__':
     exponent = np.arange(16)
     q_values = 10 ** (-exponent / 3)
-    q_values = [0.1, 1]
+    q_values = [0.01, 0.1, 0.3]
     #q_values = [1, 0.1, 0.01]#, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
     #q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-    r_0_values = [5, 10, 25, 50, 100, 200, 400]
-    main(q_values, r_0_values, 'results/test_adj_clustering_path_length', np.array([1000, 1, 1]), filename='1d_ring_1000',
-         sphere=False, randomsphere=False, eqsphere=False, directed=False, nxwatts_strogatz=False)
+    r_0_values = 0.447#[5, 10, 25, 50, 100, 200, 400]
+    N_values = [100, 500, 1000, 2000, 3000]
+    main2(q_values, r_0_values, N_values, 'results/N_scaling', np.array([1000, 1, 1]),
+         sphere=True)

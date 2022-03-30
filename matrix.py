@@ -446,7 +446,6 @@ class build_matrix:
             if normalized:
                 D = diags(-1 / L_rnd.diagonal())
             else:
-                print(np.mean(L_rnd.diagonal()))
                 D = -1/np.mean(L_rnd.diagonal())
             if adjacency:
                 L_rnd.setdiag(0)
