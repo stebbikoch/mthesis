@@ -30,7 +30,7 @@ class analytics:
         try:
             f = open('./d_functions/' + d_function + '.json', )
         except:
-            f = open('./d_functions/' + d_function + '.txt', )
+            f = open('../d_functions/' + d_function + '.json', )
         # returns JSON object as
         # a dictionary
         data = json.load(f)
@@ -73,9 +73,12 @@ class analytics:
         else:
             return np.sum(np.exp(1j*np.pi*2*np.dot(p,d_vector.T)))
 
-    def exact_eigens(self, q, r):
+    def exact_eigens(self, q, r, hexagonal=True):
         self.q=q
-        alpha= self.exact_alpha('2d_32_32_eucl_tightest', 1,r, smallest=True)
+        if hexagonal:
+            alpha= self.exact_alpha('2d_32_32_hexagonal', 1,r, smallest=True)
+        else:
+            alpha = self.exact_alpha('2d_32_32_square', 1, r, smallest=True)
         print('real k', self.k)
         return (-self.k+(1+self.Delta_1-self.Delta_2)*alpha-self.Delta_2)/self.k
 
@@ -140,10 +143,10 @@ class analytics:
         self.q = q
         self.k = (2*r+1)**3-1
         if smallest:
-            p_l=np.round(1.5*20/ (2 * r + 1))/20
+            p_l=np.round(1.5*16/ (2 * r + 1))/16
             p = np.array([1e-9, 1e-9, p_l])
         else:
-            p = np.array([1/20, 1e-9, 1e-9])
+            p = np.array([1/16, 1e-9, 1e-9])
         alpha = np.prod(np.sin((2*r+1)*np.pi*p)/np.sin(np.pi*p))-1
         return (-self.k + (1+self.Delta_1-self.Delta_2)*alpha -self.Delta_2)/self.k
 

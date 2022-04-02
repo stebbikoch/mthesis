@@ -8,13 +8,13 @@ mpl.rcParams['lines.markersize'] = 4.5
 
 
 f1 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-          's8583916-stefans_ws/mthesis/results/fibbonaccisphereshort.json')
+          's8583916-stefans_ws/mthesis/results/3dmaxshort.json')
 f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-          's8583916-stefans_ws/mthesis/results/fibbonaccisphere_dirshort.json')
+          's8583916-stefans_ws/mthesis/results/3d_maxdirshort.json')
 f3 = open('../results/N_scalingshort.json')
 # returns JSON object as
 # a dictionary
-instance1 = analytics(1,1,1000)
+instance1 = analytics(0,0,4096)
 data1 = json.load(f1)
 data2 = json.load(f2)
 data3 = json.load(f3)
@@ -24,14 +24,14 @@ q_values_2 = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 q_values_3 = [0.6, 0.7, 0.8, 0.9, 1.0]
 exponent = np.arange(201)
 q_values = 10**(-exponent/40)
-r_values = r_0_values = [0.283, 0.447, 0.894, 1.789]#[0.283, 0.447, 0.632, 0.894, 1.265, 1.789]
+r_values = r_0_values = [1, 3, 4, 6]#[0.283, 0.447, 0.632, 0.894, 1.265, 1.789]
 fig, ((ax, ax1), (ax2, ax3), (ax4, ax5)) = plt.subplots(nrows=3, ncols=2, figsize=(6.4, 7.2))
 #ax1.hlines(-1-1/8, 0, 1, color='k', linewidth=1)
-for r_0, k_about in zip(r_values,['20', '50', '200', '800']):
+for r_0, k_about in zip(r_values,['26', '342', '728', '2196']):
     k=data1[str(r_0)]['k']
     # second largest
-    line0, = ax.plot(q_values, [instance1.second_lam_sphere(q=q, r_0=r_0) for q in q_values],
-                       zorder=2, linewidth=1, label=r'$k \approx {}$'.format(k_about))
+    line0, = ax.plot(q_values, [instance1.second_lam_three_dim(q=q, r=r_0) for q in q_values],
+                       zorder=2, linewidth=1, label=r'$k = {}$'.format(k_about))
     # undirected
     line2 = ax.errorbar(q_values_1, [data1[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1],
                          yerr=[data1[str(r_0)]['qs'][str(q)]['second_largest'][1] for q in q_values_1], fmt='x',
@@ -44,7 +44,7 @@ for r_0, k_about in zip(r_values,['20', '50', '200', '800']):
                 markerfacecolor='none', capsize=2)
     # smallest
     #if r_0 in [0.894, 1.789]:
-    ax1.plot(q_values, [instance1.smallest_lam_sphere(q=q, r_0=r_0) for q in q_values],
+    ax1.plot(q_values, [instance1.second_lam_three_dim(q=q, r=r_0, smallest=True) for q in q_values],
                      label=r'$r_0={}~~(\^k={:.2f})$'.format(r_0, k), zorder=2, linewidth=1, color=line0.get_color())
     #elif r_0 in [0.283, 0.447]:
      #   if r_0 == 0.283:
@@ -53,17 +53,16 @@ for r_0, k_about in zip(r_values,['20', '50', '200', '800']):
         #    r_1 = 4.1
         #ax1.plot(q_values, instance1.exact_eigens(q_values, r_1, hexagonal=True),
          #        label=r'$r_0={}~~(\^k={:.2f})$'.format(r_0, k), zorder=1, color=line0.get_color())
-    if r_0 in [0.283, 0.447, 0.894, 1.789]:
-        # undirected
-        ax1.errorbar(q_values_1, [data1[str(r_0)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
-                            yerr=[data1[str(r_0)]['qs'][str(q)]['smallest'][1] for q in q_values_1], fmt='x',
-                            color=line0.get_color(),
-                            markerfacecolor='none', capsize=2)
-        # directed
-        ax1.errorbar(q_values_1, [data2[str(r_0)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
-                     yerr=[data2[str(r_0)]['qs'][str(q)]['smallest'][1] for q in q_values_1], fmt='o',
-                     color=line0.get_color(),
-                     markerfacecolor='none', capsize=2)
+    # undirected
+    ax1.errorbar(q_values_1, [data1[str(r_0)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
+                        yerr=[data1[str(r_0)]['qs'][str(q)]['smallest'][1] for q in q_values_1], fmt='x',
+                        color=line0.get_color(),
+                        markerfacecolor='none', capsize=2)
+    # directed
+    ax1.errorbar(q_values_1, [data2[str(r_0)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
+                 yerr=[data2[str(r_0)]['qs'][str(q)]['smallest'][1] for q in q_values_1], fmt='o',
+                 color=line0.get_color(),
+                 markerfacecolor='none', capsize=2)
     # laplacian p->1
     ax2.errorbar(q_values_2, [data1[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_2],
                          yerr=[data1[str(r_0)]['qs'][str(q)]['second_largest'][1] for q in q_values_2], fmt='x',
@@ -74,8 +73,8 @@ for r_0, k_about in zip(r_values,['20', '50', '200', '800']):
                  color=line0.get_color(),
                  markerfacecolor='none', capsize=2)
     # undirected laplacian approx
-    yd = instance1.laplacian_approx(k, 1000)
-    yu = instance1.laplacian_approx(k, 1000, largest=False)
+    yd = instance1.laplacian_approx(k, 4096)
+    yu = instance1.laplacian_approx(k, 4096, largest=False)
     line4=ax2.hlines(yd, 0.1, 1.1, color=line0.get_color(), linewidth=1)
     line5=ax2.hlines(yu, 0.1, 1.1, color=line0.get_color(), linewidth=1)
     ax2.set_xlim(0.15, 1.05)
@@ -89,8 +88,8 @@ for r_0, k_about in zip(r_values,['20', '50', '200', '800']):
                  color=line0.get_color(),
                  markerfacecolor='none', capsize=2)
     # undirected laplacian approx
-    yd =  np.sqrt(1 / k - 1 / 1000) - 1
-    yu =  - np.sqrt(1 / k - 1 / 1000) - 1
+    yd =  np.sqrt(1 / k - 1 / 4096) - 1
+    yu =  - np.sqrt(1 / k - 1 / 4096) - 1
     ax3.hlines(yd, 0.5, 1.1, color=line0.get_color(), linewidth=1)
     ax3.hlines(yu, 0.5, 1.1, color=line0.get_color(), linewidth=1)
     ax3.set_xlim(0.55, 1.05)
@@ -103,8 +102,8 @@ for r_0, k_about in zip(r_values,['20', '50', '200', '800']):
                  yerr=[data1[str(r_0)]['qs'][str(q)]['smallest_adj'][1] for q in q_values_2], fmt='x',
                  color=line0.get_color(),
                  markerfacecolor='none', capsize=2)
-    yd = 2 * np.sqrt(1 / k - 1 / 1000)
-    yu = - 2 * np.sqrt(1 / k - 1 / 1000)
+    yd = 2 * np.sqrt(1 / k - 1 / 4096)
+    yu = - 2 * np.sqrt(1 / k - 1 / 4096)
     line4 = ax4.hlines(yd, 0.1, 1.1, color=line0.get_color(), linewidth=1, label=r'$k \approx {}$'.format(k_about))
     line5 = ax4.hlines(yu, 0.1, 1.1, color=line0.get_color(), linewidth=1)
     ax4.set_xlim(0.15, 1.05)
@@ -159,5 +158,5 @@ ax5.legend(loc='lower left', bbox_to_anchor=(0, -0.9))
 #plt.legend()
 #axs[1].set_yscale('symlog')
 #axs[1].set_xscale('log')
-plt.savefig('../figures/sphere_mosaic.svg', format='svg', dpi=1000, bbox_inches='tight')
+plt.savefig('../figures/3d_torus_mosaic.svg', format='svg', dpi=1000, bbox_inches='tight')
 plt.show()

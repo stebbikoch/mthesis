@@ -11,9 +11,9 @@ from analytics import analytics
 #          's8583916-stefans_ws/mthesis/results/test_sphere_second_largest1000.jsonshort.json')
 #f = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
  #         's8583916-stefans_ws/mthesis/results/sphere_new_r0_1000_undirected.jsonshort.json')
-f = open('results/fibbo_sphere_1000short.json')
-f1=open('results/random_sphere_1000short.json')
-f2=open('results/eq_sphere_1000short.json')
+f = open('../results/fibbo_sphere_1000short.json')
+f1=open('../results/random_sphere_1000short.json')
+f2=open('../results/eq_sphere_1000short.json')
 #f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
  #         's8583916-stefans_ws/mthesis/results/sphere_new_r0_1000_undirected.jsonshort.json')
 #f2 = open('results/test_sphere_smallest5000.jsonshort.json')

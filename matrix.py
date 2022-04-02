@@ -460,7 +460,7 @@ class build_matrix:
 
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([4096, 1, 1]))
+    x = integer_inequality(np.array([64, 64, 1]))
     #x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
-    x.all_numbers(49, d_given=[0.159344], sphere=True)
-    x.save_to_json('sphere_4096')
+    x.all_numbers(400, d_given=[2, 9, 13, 23])#, eucl=True)
+    x.save_to_json('2d_64_64_max')
