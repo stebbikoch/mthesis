@@ -1,4 +1,4 @@
-from matrix import build_matrix
+from matrix import build_matrix, integer_inequality
 import json
 #from matrix import integer_inequality
 import numpy as np
@@ -172,8 +172,8 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, ra
         with open(filepathshort, 'w') as outfile:
             json.dump(shortdict, outfile)
 
-def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere=False, randomsphere=False, eqsphere=False,
-         directed=False, nxwatts_strogatz=False, pathclustering=False):
+def main2(q_values, r_0_values, N_values, name, dimensions, sphere=False, randomsphere=False, eqsphere=False,
+         directed=False, nxwatts_strogatz=False, pathclustering=False, eucl=False):
     time1 = time.time()
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -189,20 +189,24 @@ def main2(q_values, r_0_value, N_values, name, dimensions, filename=None, sphere
                                           'k_max':float(),
                                           'k_min':float()} for q in q_values}} for N in N_values}
     # go through r_0 and q values
-    for N in N_values:
+    for N, r_0 in zip(N_values, r_0_values):
         time3=time.time()
         if sphere:
             dimensions = np.array([N, 1, 1])
             z = fibonacci_sphere(np.prod(dimensions), random=randomsphere, eq_partition=eqsphere)
-            z.wiring(r_0_value)
+            z.wiring(r_0)
         else:
             if dimensions[2] == 1 and dimensions[1]==1:
                 dimensions = np.array([N, 1, 1])
             elif dimensions[2] == 1:
-                dimensions = np.array([np.sqrt(N), np.sqrt(N), 1])
+                dimensions = np.array([int(np.sqrt(N)), int(np.sqrt(N)), 1])
             else:
-                dimensions = np.array([np.cbrt(N), np.cbrt(N), np.cbrt(N)])
-            z = build_matrix(filename, dimensions, r_0_value)
+                dimensions = np.array([int(np.cbrt(N)), int(np.cbrt(N)), int(np.cbrt(N))])
+            print(dimensions)
+            x = integer_inequality(dimensions)
+            x.all_numbers(400, d_given=[r_0], eucl=eucl)
+            x.save_to_json(str(N)+str(r_0)+str(eucl))
+            z = build_matrix(str(N)+str(r_0)+str(eucl), dimensions, r_0)
             z.tuples=build_matrix.fast_all_indices(np.array(z.D_0), z.N)
             z.one_int_index_tuples_and_adjacency()
             z.Laplacian_0()
@@ -336,7 +340,6 @@ if __name__ == '__main__':
     q_values = [0.01, 0.1, 0.3]
     #q_values = [1, 0.1, 0.01]#, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]
     #q_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1]
-    r_0_values = 0.447#[5, 10, 25, 50, 100, 200, 400]
-    N_values = [100, 500, 1000, 2000, 3000]
-    main2(q_values, r_0_values, N_values, 'results/N_scaling', np.array([1000, 1, 1]),
-         sphere=True)
+    r_0_values = [1, 2, 3]#[5, 10, 25, 50, 100, 200, 400]
+    N_values = [81, 484, 784]
+    main2(q_values, r_0_values, N_values, 'results/2d_max_N_scaling', np.array([16, 16, 1]), directed=True)
