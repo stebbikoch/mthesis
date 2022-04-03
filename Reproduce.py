@@ -199,9 +199,9 @@ def main2(q_values, r_0_values, N_values, name, dimensions, sphere=False, random
             if dimensions[2] == 1 and dimensions[1]==1:
                 dimensions = np.array([N, 1, 1])
             elif dimensions[2] == 1:
-                dimensions = np.array([int(np.sqrt(N)), int(np.sqrt(N)), 1])
+                dimensions = np.array([int(round(np.sqrt(N))), int(round(np.sqrt(N))), 1])
             else:
-                dimensions = np.array([int(np.cbrt(N)), int(np.cbrt(N)), int(np.cbrt(N))])
+                dimensions = np.array([int(round(np.cbrt(N))), int(round(np.cbrt(N))), int(round(np.cbrt(N)))])
             print(dimensions)
             x = integer_inequality(dimensions)
             x.all_numbers(400, d_given=[r_0], eucl=eucl)

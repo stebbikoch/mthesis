@@ -142,13 +142,17 @@ class analytics:
     def second_lam_three_dim(self, q=None, r=None, smallest=False):
         self.q = q
         self.k = (2*r+1)**3-1
+        n=np.cbrt(self.N)
         if smallest:
-            p_l=np.round(1.5*16/ (2 * r + 1))/16
-            p = np.array([1e-9, 1e-9, p_l])
+            p_l=np.round(1.5*n/ (2 * r + 1))/n
+            p = p_l#np.array([1e-9, 1e-9, p_l])
         else:
-            p = np.array([1/16, 1e-9, 1e-9])
-        alpha = np.prod(np.sin((2*r+1)*np.pi*p)/np.sin(np.pi*p))-1
+            p = 1/n#np.array([1/n, 1e-9, 1e-9])
+        alpha = (2*r+1)**2*np.sin((2*r+1)*np.pi*p)/np.sin(np.pi*p)-1
         return (-self.k + (1+self.Delta_1-self.Delta_2)*alpha -self.Delta_2)/self.k
+
+    def second_lam_arb_dim(self, d, q, dim=3):
+        return -1 + (1 - q + (q-1)*q*d/(1-d*(1-q))) * (np.sin(np.pi*d**(1/dim))/(np.pi*d**(1/dim)))
 
     def second_lam_two_dim(self, q=None, r=None, n=None, smallest=False):
         self.q = q
