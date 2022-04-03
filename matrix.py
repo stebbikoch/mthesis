@@ -74,16 +74,20 @@ class integer_inequality:
         with open('./d_functions/'+name+'.json', 'w') as outfile:
             json.dump([self.numbers, self.indices, self.d_0], outfile)
 
+    @property
+    def data(self):
+        return [self.numbers, self.indices, self.d_0]
+
 class build_matrix:
-    def __init__(self, d_function, N, r_0):
-        self.d_function = d_function # string name of d_function
-        try:
-            f = open('../d_functions/'+self.d_function+'.json')
-        except:
-            f = open('d_functions/' + self.d_function + '.json')
-        # returns JSON object as
-        # a dictionary
-        data = json.load(f)
+    def __init__(self, N, r_0, data=None, d_function=None):
+        if data is None:
+            try:
+                f = open('../d_functions/'+d_function+'.json')
+            except:
+                f = open('d_functions/' +d_function + '.json')
+            # returns JSON object as
+            # a dictionary
+            data = json.load(f)
         self.numbers = data[0]
         self.all_indices_list = data[1]
         self.d_0s = np.array(data[2])
