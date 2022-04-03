@@ -44,7 +44,7 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, ra
             z = fibonacci_sphere(np.prod(dimensions), random=randomsphere, eq_partition=eqsphere)
             z.wiring(r_0)
         else:
-            z = build_matrix(filename, dimensions, r_0)
+            z = build_matrix(dimensions, r_0, d_function=filename)
             z.tuples=build_matrix.fast_all_indices(np.array(z.D_0), z.N)
             z.one_int_index_tuples_and_adjacency()
             z.Laplacian_0()

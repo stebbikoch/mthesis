@@ -444,7 +444,7 @@ class build_matrix:
             k=abs(L_rnd[0,0])
             if adjacency:
                 L_rnd.setdiag(0)
-            eigenvalues, eigenvectors = eigs(1/k * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
+            eigenvalues, eigenvectors = eigs(1/k * L_rnd + shift * identity(N_tot), k=4, ncv=30, which='LM')
             eigenvalues = np.real(eigenvalues)
         else:
             if normalized:
@@ -453,7 +453,7 @@ class build_matrix:
                 D = -1/np.mean(L_rnd.diagonal())
             if adjacency:
                 L_rnd.setdiag(0)
-            eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=20, which='LM')
+            eigenvalues, eigenvectors = eigsh(D * L_rnd + shift * identity(N_tot), k=4, ncv=30, which='LM')
         #print('eigenvalues', eigenvalues-1.2)
         if smallest:
             output = np.partition(eigenvalues.flatten(), -2)[0]
