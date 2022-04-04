@@ -163,10 +163,13 @@ class analytics:
             self.n=np.sqrt(self.N)
         if smallest:
             p_l=np.round(1.5*self.n/ (2 * r + 1))/self.n
-            p = np.array([1e-9, p_l])
+            p = p_l
         else:
-            p = np.array([1e-9, 1 / self.n])
-        alpha = np.prod(np.sin((2 * r + 1) * np.pi * p) / np.sin(np.pi * p)) - 1
+            p = 1 / self.n
+        if smallest:
+            alpha = min([(2*r+1)*(np.sin((2 * r + 1) * np.pi * i) / np.sin(np.pi * i)) - 1 for i in [p-2/n, p-1/n, p, p+1/n, p+2/n]])
+        else:
+            alpha = (2 * r + 1) * (np.sin((2 * r + 1) * np.pi * p) / np.sin(np.pi * p)) - 1
         return (-self.k + (1 + self.Delta_1 - self.Delta_2) * alpha - self.Delta_2)/self.k
 
     def second_lam_one_dim(self, q=None, k=None, smallest=True):

@@ -51,26 +51,33 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, ra
         dictionary[str(r_0)]['k'] = z.k
         for q in q_values:
             # use original watts strogatz algorithm (implemented through networkx, only for undirected case)
-            if nxwatts_strogatz:
-                G = nx.generators.random_graphs.watts_strogatz_graph(z.N_tot, z.k, q)
-                L_rnd = -nx.linalg.laplacianmatrix.laplacian_matrix(G)
-            elif directed:
-                rows, columns, values = find(z.L_0)
-                new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, z.k, q)
-                L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
-            else:
-                L_rnd = build_matrix.fast_rewiring_undirected(z.L_0, z.k, q, z.N_tot, save_mem=False)
-            # not normalized (only scaled) eigenvalues
-            lam = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=False,
-                                                   normalized=False)
-            lam2 = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=True,
-                                                    normalized=False)
-            # adjacency eigenvalues
-            lam_adj = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=False,
-                                                   normalized=False, adjacency=True)
-            lam2_adj = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=True,
-                                                    normalized=False, adjacency=True)
-            # max and min degrees
+            repeat=True
+            while repeat:
+                if nxwatts_strogatz:
+                    G = nx.generators.random_graphs.watts_strogatz_graph(z.N_tot, z.k, q)
+                    L_rnd = -nx.linalg.laplacianmatrix.laplacian_matrix(G)
+                elif directed:
+                    rows, columns, values = find(z.L_0)
+                    new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, z.k, q)
+                    L_rnd = csr_matrix((values, (new_rows, columns)), shape=(z.N_tot, z.N_tot))
+                else:
+                    L_rnd = build_matrix.fast_rewiring_undirected(z.L_0, z.k, q, z.N_tot, save_mem=False)
+                try:
+                    # not normalized (only scaled) eigenvalues
+                    lam = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=False,
+                                                           normalized=False)
+                    lam2 = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=True,
+                                                            normalized=False)
+                    # adjacency eigenvalues
+                    lam_adj = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=False,
+                                                           normalized=False, adjacency=True)
+                    lam2_adj = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=True,
+                                                            normalized=False, adjacency=True)
+                    repeat=False
+                except:
+                    print('NoConvergence Error? Rewire again!')
+                    repeat=True
+                # max and min degrees
             min_degree = int(np.min(-L_rnd.diagonal()))
             max_degree = int(np.max(-L_rnd.diagonal()))
             # characteristic path length and clustering coefficient

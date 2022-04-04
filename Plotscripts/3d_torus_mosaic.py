@@ -11,10 +11,10 @@ f1 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916
           's8583916-stefans_ws/mthesis/results/3dmaxshort.json')
 f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
           's8583916-stefans_ws/mthesis/results/3d_maxdirshort.json')
-#f3 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-#          's8583916-stefans_ws/mthesis/results/N_scaling3dmaxundirshort.json')
-f3 = open('../results/N_scaling3dmaxundirshort.json')
-f4 = open('../results/N_scaling3dmaxdirshort.json')
+f3 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+          's8583916-stefans_ws/mthesis/results/N_scaling3dmaxundirshort.json')
+f4 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+          's8583916-stefans_ws/mthesis/results/N_scaling3dmaxdirshort.json')
 cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #f4 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
  #         's8583916-stefans_ws/mthesis/results/N_scaling3dmaxdirshort.json')

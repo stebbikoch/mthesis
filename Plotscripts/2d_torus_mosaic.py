@@ -8,13 +8,13 @@ mpl.rcParams['lines.markersize'] = 4.5
 
 
 f1 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-          's8583916-stefans_ws/mthesis/results/3dmaxshort.json')
+          's8583916-stefans_ws/mthesis/results/2d_maxshort.json')
 f2 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-          's8583916-stefans_ws/mthesis/results/3d_maxdirshort.json')
-#f3 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
-#          's8583916-stefans_ws/mthesis/results/N_scaling3dmaxundirshort.json')
-f3 = open('../results/N_scaling3dmaxundirshort.json')
-f4 = open('../results/N_scaling3dmaxdirshort.json')
+          's8583916-stefans_ws/mthesis/results/2d_maxdirshort.json')
+f3 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+          's8583916-stefans_ws/mthesis/results/N_scaling2dmaxundirshort.json')
+f4 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+          's8583916-stefans_ws/mthesis/results/N_scaling2dmaxdirshort.json')
 cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #f4 = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
  #         's8583916-stefans_ws/mthesis/results/N_scaling3dmaxdirshort.json')
@@ -31,13 +31,12 @@ q_values_2 = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 q_values_3 = [0.6, 0.7, 0.8, 0.9, 1.0]
 exponent = np.arange(201)
 q_values = 10**(-exponent/40)
-r_values = r_0_values = [1, 3, 4, 6]#[0.283, 0.447, 0.632, 0.894, 1.265, 1.789]
+r_values = r_0_values = [2, 9, 13, 23]
 fig, ((ax, ax1), (ax2, ax3), (ax4, ax5)) = plt.subplots(nrows=3, ncols=2, figsize=(6.4, 7.2))
-#ax1.hlines(-1-1/8, 0, 1, color='k', linewidth=1)
-for r_0, k_about in zip(r_values,['26', '342', '728', '2196']):
+for r_0, k_about in zip(r_values,['24', '360', '728', '2208']):
     k=data1[str(r_0)]['k']
     # second largest
-    line0, = ax.plot(q_values, [instance1.second_lam_three_dim(q=q, r=r_0) for q in q_values],
+    line0, = ax.plot(q_values, [instance1.second_lam_two_dim(q=q, r=r_0, n=64) for q in q_values],
                        zorder=2, linewidth=1, label=r'$k = {}$'.format(k_about))
     # undirected
     line2 = ax.errorbar(q_values_1, [data1[str(r_0)]['qs'][str(q)]['second_largest'][0] for q in q_values_1],
@@ -51,15 +50,8 @@ for r_0, k_about in zip(r_values,['26', '342', '728', '2196']):
                 markerfacecolor='none', capsize=2)
     # smallest
     #if r_0 in [0.894, 1.789]:
-    ax1.plot(q_values, [instance1.second_lam_three_dim(q=q, r=r_0, smallest=True) for q in q_values],
+    ax1.plot(q_values, [instance1.second_lam_two_dim(q=q, r=r_0, n=64, smallest=True) for q in q_values],
                      label=r'$r_0={}~~(\^k={:.2f})$'.format(r_0, k), zorder=2, linewidth=1, color=line0.get_color())
-    #elif r_0 in [0.283, 0.447]:
-     #   if r_0 == 0.283:
-      #      r_1 = 2.3
-       # else:
-        #    r_1 = 4.1
-        #ax1.plot(q_values, instance1.exact_eigens(q_values, r_1, hexagonal=True),
-         #        label=r'$r_0={}~~(\^k={:.2f})$'.format(r_0, k), zorder=1, color=line0.get_color())
     # undirected
     ax1.errorbar(q_values_1, [data1[str(r_0)]['qs'][str(q)]['smallest'][0] for q in q_values_1],
                         yerr=[data1[str(r_0)]['qs'][str(q)]['smallest'][1] for q in q_values_1], fmt='x',
@@ -114,14 +106,14 @@ for r_0, k_about in zip(r_values,['26', '342', '728', '2196']):
     line4 = ax4.hlines(yd, 0.1, 1.1, color=line0.get_color(), linewidth=1, label=r'$k \approx {}$'.format(k_about))
     line5 = ax4.hlines(yu, 0.1, 1.1, color=line0.get_color(), linewidth=1)
     ax4.set_xlim(0.15, 1.05)
-N_values = [216, 1331, 3375]
+N_values = [81, 225, 484, 784, 1156, 1681, 2209, 2916, 3600, 4096]
 for q, color in zip([0.001, 0.01, 0.1, 0.3], cycle[4:8]):
     # scaling with network-size N
-    instance2 = analytics(1, 1, 3375)
-    y1 = instance2.second_lam_arb_dim(0.1, q)
+    instance2 = analytics(1, 1, 4096)
+    y1 = instance2.second_lam_arb_dim(0.1, q, dim=2)
     #y = instance2.second_lam_three_dim(q=q, r=3)
-    line5=ax5.hlines(y1, 0, 3500, color=color)
-    ax5.set_xlim(0, 3500)
+    line5=ax5.hlines(y1, 0, 3700, color=color)
+    ax5.set_xlim(0, 3700)
     #line5=ax5.hlines(y, 0, 3500, color=color)
     ax5.errorbar(N_values, [data3[str(N)]['qs'][str(q)]['second_largest'][0] for N in N_values],
                      yerr=[data3[str(N)]['qs'][str(q)]['second_largest'][1] for N in N_values], fmt='x',
@@ -170,5 +162,5 @@ ax5.legend(loc='lower left', bbox_to_anchor=(0, -0.72), ncol=2, columnspacing=1)
 #plt.legend()
 #axs[1].set_yscale('symlog')
 #axs[1].set_xscale('log')
-plt.savefig('../figures/3d_torus_mosaic.svg', format='svg', dpi=1000, bbox_inches='tight')
+plt.savefig('../figures/2d_torus_mosaic.svg', format='svg', dpi=1000, bbox_inches='tight')
 plt.show()
