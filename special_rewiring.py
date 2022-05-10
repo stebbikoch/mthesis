@@ -24,7 +24,7 @@ def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, ga
             z = fibonacci_sphere(np.prod(dimensions))
             z.wiring(r_0)
         else:
-            z = build_matrix(filename, dimensions, r_0)
+            z = build_matrix(dimensions, r_0, d_function=filename)
             z.tuples=build_matrix.fast_all_indices(np.array(z.D_0), z.N)
             z.one_int_index_tuples_and_adjacency()
             z.Laplacian_0()
@@ -35,6 +35,7 @@ def main(m_values, r_0_values, name, dimensions, filename=None, sphere=False, ga
             #plt.imshow(z.L_0.toarray(), vmin=0)
             #plt.show()
             if not gaussian:
+                #print(m)
                 z.special_rewiring_1d(m)
             else:
                 z.gaussian_rewiring_1d(m, mu=mu, sigma=sigma)
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     exponent = np.arange(15).astype(float)
     m_values = (10**(-exponent/5)*1000).astype(int)
     m_values = np.append(m_values, 0)
-    print(m_values)
+    #print(m_values)
     r_0_values = [10, 25, 50, 100]
-    main(q_values, r_0_values, 'reproduce/ring_gaussian', np.array([1000, 1, 1]),mu=300, sigma=30, filename='1d_ring_1000',
-         sphere=False, gaussian=True)
+    main(m_values, r_0_values, 'reproduce/ring_delta_peak', np.array([1000, 1, 1]), filename='1d_1000',
+         sphere=False, gaussian=False)
