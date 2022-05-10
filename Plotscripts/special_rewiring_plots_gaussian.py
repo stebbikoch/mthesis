@@ -5,7 +5,8 @@ import statistics as st
 from analytics import analytics
 
 
-f = open('../reproduce/ring_gaussianshort.json')
+#f = open('../reproduce/ring_gaussianshort.json')
+f =
 mu=300
 sigma=30
 # returns JSON object as

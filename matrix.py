@@ -268,12 +268,19 @@ class build_matrix:
         self.L_rnd += csr_matrix((np.ones(2 * len(ps_del)), (np.append(ps_del, qs_del), np.append(ps_del, qs_del))),
                             shape=(self.N_tot, self.N_tot))
         # now redistribute edges gaussian wise
-        lengthes = np.round(np.random.normal(loc=mu, scale=sigma, size=2*M)).astype(int)
-        lengthes = lengthes[lengthes<500]
-        assert len(lengthes)>=M, 'Length of lengthes variable is too short ({})!!'.format(len(lengthes))
-        lengthes = lengthes[:M]
-        histo = np.histogram(lengthes, range=(1,500), bins=500)[0]
-        assert np.max(histo)<=self.N_tot, 'Redistribution of edges has problems, maximum larger than N_tot!!!'
+        success = False
+        while not success:
+            lengthes = np.round(np.random.normal(loc=mu, scale=sigma, size=2*M)).astype(int)
+            lengthes = lengthes[lengthes<500]
+            assert len(lengthes)>=M, 'Length of lengthes variable is too short ({})!!'.format(len(lengthes))
+            lengthes = lengthes[:M]
+            histo = np.histogram(lengthes, range=(1,500), bins=500)[0]
+            # more than 1000 in one bin? that's a problem!!
+            if np.max(histo)<=self.N_tot:
+                success=True
+            else:
+                print("turn another round.")
+        #assert np.max(histo)<=self.N_tot, 'Redistribution of edges has problems, maximum larger than N_tot!!!'
         #print(histo)
         indices=np.where(histo!=0)[0]
         for i in range(len(indices)):

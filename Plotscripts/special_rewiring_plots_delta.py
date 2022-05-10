@@ -5,7 +5,9 @@ import statistics as st
 from analytics import analytics
 
 
-f = open('../reproduce/ring_specialshort.json')
+#f = open('../reproduce/ring_specialshort.json')
+f = open('/run/user/1000/gvfs/sftp:host=taurus.hrsk.tu-dresden.de,user=s8583916/home/h3/s8583916/home/scratch/'+
+          's8583916-stefans_ws/mthesis/results/1d_delta_peak_rewiringshort.json')
 mu=300
 sigma=30
 # returns JSON object as
@@ -23,9 +25,11 @@ exponent = np.arange(1,16)
 m_values = 10 ** (-exponent / 3)
 exponent = np.arange(15).astype(float)
 m_values = (10**(-exponent/5)*1000).astype(int)
+m_values = np.append(m_values, 0)
 #m_values = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 0.2, 0.4]#[0,2,5,10,15,20,25,30,40,50]+[int(item/n*1000) for item in ara]
 exponent = np.arange(1001).astype(float)
 m_values_1 = (10**(-exponent/(1000/3))*1000)
+m_values_1 = np.append(m_values_1, [0, 0.5])
 #m_values_1 = np.append(m_values_1, np.arange(10)/10)
 r_0_values = [10, 25, 50, 100]#, 200, 400]#[20, 50, 100, 200, 400, 800]
 c=['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
@@ -44,7 +48,7 @@ for r_0 in r_0_values:
 
 #plt.yscale('symlog', linthreshy=0.0001)
 for a, label in zip([ax, ax1],['a', 'b']):
-    a.set_xscale('log')
+    a.set_xscale('symlog', linthresh=1)
     a.set_xlabel(r'moved edges $m$')
     a.set_title(label, loc='left', fontweight='bold', fontsize=10)
 #plt.xlim(0.47,1.03)
