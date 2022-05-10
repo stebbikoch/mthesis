@@ -22,7 +22,7 @@ def worker(q, L_0=None, k=None, N_tot=None, directed=False):
     return lam, lam2
 
 def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, randomsphere=False, eqsphere=False,
-         directed=False, nxwatts_strogatz=False, pathclustering=False):
+         directed=False, nxwatts_strogatz=False, pathclustering=False, newman=False, weighted=False):
     time1 = time.time()
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
@@ -56,6 +56,10 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, ra
                 if nxwatts_strogatz:
                     G = nx.generators.random_graphs.watts_strogatz_graph(z.N_tot, z.k, q)
                     L_rnd = -nx.linalg.laplacianmatrix.laplacian_matrix(G)
+                elif newman:
+                    G = nx.generators.random_graphs.newman_watts_strogatz_graph(z.N_tot, z.k, q)
+                    L_rnd = -nx.linalg.laplacianmatrix.laplacian_matrix(G)
+                    L_rnd = 1/(2*r_0) * L_rnd
                 elif directed:
                     rows, columns, values = find(z.L_0)
                     new_rows = build_matrix.numba_fast_directed_rewiring(rows, columns, z.N_tot, z.k, q)
@@ -63,16 +67,21 @@ def main(q_values, r_0_values, name, dimensions, filename=None, sphere=False, ra
                 else:
                     L_rnd = build_matrix.fast_rewiring_undirected(z.L_0, z.k, q, z.N_tot, save_mem=False)
                 try:
+                    if weighted:
+                        L_rnd = z.weighted_laplacian(L_rnd)
+                        d_vector = np.append(np.arange(-r_0, 0), np.arange(1, r_0 + 1))
+                        offset = np.sum(1 / abs(d_vector))
+                        L_rnd = 1/offset * L_rnd
                     # not normalized (only scaled) eigenvalues
                     lam = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=False,
-                                                           normalized=False)
+                                                           normalized=False, weighted=weighted)
                     lam2 = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=True,
-                                                            normalized=False)
+                                                            normalized=False, weighted=weighted)
                     # adjacency eigenvalues
                     lam_adj = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=False,
-                                                           normalized=False, adjacency=True)
+                                                           normalized=False, adjacency=True, weighted=weighted)
                     lam2_adj = build_matrix.arnoldi_eigenvalues(L_rnd, z.N_tot, directed=directed, smallest=True,
-                                                            normalized=False, adjacency=True)
+                                                            normalized=False, adjacency=True, weighted=weighted)
                     repeat=False
                 except:
                     print('NoConvergence Error? Rewire again!')

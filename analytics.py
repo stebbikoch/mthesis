@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import legendre as lg
 from scipy.special import jv
 from matplotlib import pyplot as plt
-from legendrepolynomials import l_approx
+#from legendrepolynomials import l_approx
 import json
 from matrix import build_matrix
 
@@ -44,6 +44,28 @@ class analytics:
         d_vector = np.array(self.all_indices_list[index])
         return len(d_vector)
 
+    def exact_eigens_weighted(self, r, q, smallest=False):
+        """
+        Exact alpha-term that corresponds to second largest eigenvalue.
+        :return:
+        """
+        n = self.N
+        self.k = 2*r
+        self.q = q
+        d_vector = np.append(np.arange(-r, 0), np.arange(1, r + 1))
+        d_vector_2 = np.append(np.arange(-int(n / 2), 0), np.arange(1, int(n / 2) + 2))
+        offset = np.sum(1 / abs(d_vector))
+        evals = []
+        for i in range(1, int(n/2+1)):
+            alpha = np.sum(1 / abs(d_vector) * np.exp(1j * np.pi * 2 * np.dot(i / 1000, d_vector)))
+            beta = np.sum(1 / abs(d_vector_2) * np.exp(1j * np.pi * 2 * np.dot(i / 1000, d_vector_2)))
+            evals.append((-offset+(1+self.Delta_1-self.Delta_2)*alpha+self.Delta_2*beta)/offset)
+        if smallest:
+            output = min(evals)
+        else:
+            output = max(evals)
+        return output
+
     def exact_alpha(self, d_function, p, r, smallest=False, multi_p=False, threed=False):
         self.D_0_load(d_function)
         index=np.where(self.d_0s==r)[0][0]
@@ -51,17 +73,17 @@ class analytics:
         self.k = len(d_vector[:,0])
         if smallest:
             alpha = []
-            limit=int(5.1356 * 100 / (2 * np.pi * r)+1.5)
+            limit=int(5.1356 * 64 / (2 * np.pi * r)+1.5)
             if threed:
-                limit = int(5.763/(2*np.pi*r)*20+1.5)
+                limit = int(5.763/(2*np.pi*r)*16+1.5)
             for i in range(limit):
                 for j in range(limit):
                     if threed:
                         for k in range(limit):
-                            p = np.array([i / 20, j / 20, k/20])
+                            p = np.array([i / 16, j / 16, k/16])
                             alpha.append(np.real(np.sum(np.exp(1j * np.pi * 2 * np.dot(p, d_vector.T)))))
                     else:
-                        p = np.array([i / 100, j / 100, 0])
+                        p = np.array([i / 64, j / 64, 0])
                         alpha.append(np.real(np.sum(np.exp(1j*np.pi*2*np.dot(p,d_vector.T)))))
             #print(alpha)
             return min(alpha)
@@ -102,21 +124,33 @@ class analytics:
     def Delta_1(self):
         return -self.q + self.q * self.Delta_2
 
+    def lam_one_dim_additive(self, r, q, smallest=False):
+        k_0 = 2*r
+        k = k_0 * (1+q)
+        alphas = []
+        for i in range(1, 501):
+            alphas.append(np.sin((k_0+1)*i*np.pi/1000)/np.sin(i*np.pi/1000))
+        if smallest:
+            alpha = min(alphas)
+        else:
+            alpha = max(alphas)
+        return (-k -1 + (1-q*k_0/(1000-1-k_0)) * alpha)/k_0
+
     def lam_two_dim_eucl(self, q=None, r=None, smallest=False, exact=False, real_k=False):
         self.q=q
-        self.k=np.pi*r**2-1
+        self.k=np.pi*r**2
         if real_k:
-            self.exact_alpha('2d_100_100_eucl', 1/100, r)
+            self.exact_alpha('2d_64_64_eucl', 1/64, r)
         if smallest:
-            p=1/100*round(5.1356*100/(2*np.pi*r))
+            p=1/64*round(5.1356*64/(2*np.pi*r))
         else:
-            p = 1/100
+            p = 1/64
         alpha = r/p*jv(1,2*np.pi*r*p)
         if exact:
             if smallest:
-                alpha = self.exact_alpha('2d_100_100_eucl', p, r, smallest=True)
+                alpha = self.exact_alpha('2d_64_64_eucl', p, r, smallest=True)
             else:
-                alpha = self.exact_alpha('2d_100_100_eucl', np.array([p,0,0]), r)
+                alpha = self.exact_alpha('2d_64_64_eucl', np.array([p,0,0]), r)
                 assert np.imag(alpha) < 1e-4, 'imaginery part should be zero but is {}'.format(np.imag(alpha))
                 alpha=np.real(alpha)
         #print('compare', self.k, alpha)
@@ -125,16 +159,16 @@ class analytics:
 
     def lam_three_dim_eucl(self, q=None, r=None, smallest=False, exact=False, real_k=False):
         self.q=q
-        self.k=4/3*np.pi*r**3-1
+        self.k=4/3*np.pi*r**3
         if real_k:
-            self.exact_alpha('3d_20_20_20_eucl', 1/20, r)
-        p = 1/20
+            self.exact_alpha('3d_16_16_16_eucl', 1/16, r)
+        p = 1/16
         alpha = (np.sin(2*np.pi*r*p)-2*np.pi*r*p*np.cos(2*np.pi*r*p))/(2*np.pi**2*p**3)
         if exact:
             if smallest:
-                alpha = self.exact_alpha('3d_20_20_20_eucl', p, r, smallest=True, threed=True)
+                alpha = self.exact_alpha('3d_16_16_16_eucl', p, r, smallest=True, threed=True)
             else:
-                alpha = self.exact_alpha('3d_20_20_20_eucl', np.array([p, 0, 0]), r)
+                alpha = self.exact_alpha('3d_16_16_16_eucl', np.array([p, 0, 0]), r)
                 alpha = np.real(alpha)
         out = -self.k+(1+self.Delta_1-self.Delta_2)*alpha-self.Delta_2
         return out/self.k
@@ -151,8 +185,17 @@ class analytics:
         alpha = (2*r+1)**2*np.sin((2*r+1)*np.pi*p)/np.sin(np.pi*p)-1
         return (-self.k + (1+self.Delta_1-self.Delta_2)*alpha -self.Delta_2)/self.k
 
-    def second_lam_arb_dim(self, d, q, dim=3):
-        return -1 + (1 - q + (q-1)*q*d/(1-d*(1-q))) * (np.sin(np.pi*d**(1/dim))/(np.pi*d**(1/dim)))
+    def second_lam_arb_dim(self, d, q, eucl=False, dim=3):
+        if eucl:
+            if dim==3:
+                z = np.cbrt(6*np.pi**2*d)
+                factor = (np.sin(z)-z*np.cos(z))/(2*np.pi**2*d)
+            elif dim==2:
+                z = np.sqrt(np.pi*d)
+                factor = jv(1,2*z)/z
+        else:
+            factor = np.sin(np.pi*d**(1/dim))/(np.pi*d**(1/dim))
+        return -1 + (1 - q + (q-1)*q*d/(1-d*(1-q))) * factor
 
     def second_lam_two_dim(self, q=None, r=None, n=None, smallest=False):
         self.q = q

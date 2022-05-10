@@ -411,8 +411,6 @@ class build_matrix:
 
 
 
-
-
     def save_to_json(self, name, thing_to_dump):
         """
         Make sure thing_to_dump is a list or dictionary.
@@ -432,7 +430,8 @@ class build_matrix:
         return second_largest-fact
 
     @staticmethod
-    def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True, adjacency=False):
+    def arnoldi_eigenvalues(L_rnd, N_tot, directed=False, smallest=False, normalized=True, adjacency=False,
+                            weighted=False, newman=False):
         L_rnd = L_rnd.copy()
         shift=2
         if smallest:
@@ -449,6 +448,8 @@ class build_matrix:
         else:
             if normalized:
                 D = diags(-1 / L_rnd.diagonal())
+            elif weighted or newman:
+                D = 1
             else:
                 D = -1/np.mean(L_rnd.diagonal())
             if adjacency:
@@ -462,9 +463,27 @@ class build_matrix:
         # print(eigenvalues)
         return output - shift
 
+    def weighted_laplacian(self, L_rnd):
+        """
+        Defines an attribute L_rnd_weighted and asigns to it the weighted laplacian. The weighted Laplacian is calculated
+        by elementwise multiplication of the Laplacian with a weight-matrix. Works for one dimension only.
+        :return:
+        """
+        n = self.N_tot
+        weight_values = [1 / i for i in range(1, int(n / 2 + 1))]
+        weight_matrix = diags(weight_values, [i for i in range(1, int(n / 2 + 1))], shape=(n, n))
+        weight_matrix += diags(weight_values, [-i for i in range(1, int(n / 2 + 1))], shape=(n, n))
+        weight_values = weight_values[:-1]
+        weight_matrix += diags(weight_values, [n - i for i in range(1, int(n / 2))], shape=(n, n))
+        weight_matrix += diags(weight_values, [-n + i for i in range(1, int(n / 2))], shape=(n, n))
+        A_weighted = csr_matrix(L_rnd.toarray()*weight_matrix.toarray())
+        for i in range(n):
+            A_weighted[i,i] = - np.sum(A_weighted[i,:])
+        self.L_weighted = A_weighted
+        return A_weighted
 
 if __name__ == "__main__":
-    x = integer_inequality(np.array([64, 64, 1]))
+    x = integer_inequality(np.array([1000, 1, 1]))
     #x.all_numbers(49, d_given=[1.58, 3.32, 4.99, 6.6, 8.29, 10.78], tightest=True)
-    x.all_numbers(400, d_given=[2, 9, 13, 23])#, eucl=True)
-    x.save_to_json('2d_64_64_max')
+    x.all_numbers(500, d_given=[])
+    x.save_to_json('1d_1000')
